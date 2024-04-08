@@ -15,7 +15,7 @@ const CadastroPage = () => {
             <Header/>
             <View style={{paddingHorizontal: 20, flex: 1, marginTop: 26}}>
                 <Text style={{ fontSize: 38, marginBottom: 5, marginTop: 10, fontWeight: "bold" }}>Cadastro</Text>
-                <View style={{width: 100, backgroundColor: 'hotpink', height: 2, marginBottom: 20 }} />
+                <View style={{width: 155, backgroundColor: 'hotpink', height: 2, marginBottom: 20, marginLeft: 3 }} />
                 <CadastrarForm/>
                 <Footer data={footerData}/>
             </View>
