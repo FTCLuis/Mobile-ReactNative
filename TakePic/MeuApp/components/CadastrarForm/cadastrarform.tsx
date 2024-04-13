@@ -11,9 +11,6 @@ const CadastrarForm = () => {
             <Text style={styles.label}>Email</Text>
             <TextInput style={styles.input} secureTextEntry />
 
-            <Text style={styles.label}>Data de Nascimento</Text>
-            {/* <TextInput style={styles.input} secureTextEntry /> */}
-
             <Text style={styles.label}>Senha</Text>
             <TextInput style={styles.input} secureTextEntry />
 
