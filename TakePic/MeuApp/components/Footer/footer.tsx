@@ -17,9 +17,9 @@ const Footer: React.FC<FooterProps> = ({data}) => {
 
   const redirecionarPagina = () => {
     if (data.text2 === "cadastrar") {
-      navigation.navigate('CadastroScreen');
+      navigation.navigate('CadastroScreen' as never);
     } else {
-      navigation.navigate('LoginScreen');
+      navigation.navigate('LoginScreen' as never);
     }
   };
 
