@@ -6,7 +6,7 @@ import LoginForm from '../components/LoginForm/loginform';
 
 const footerData = {
   text: "Não possui conta? ",
-  text2: "cadastrar"
+  text2: "Cadastre-se"
 }
 
 const LoginPage = () => {
