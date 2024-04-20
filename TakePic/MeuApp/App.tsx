@@ -1,9 +1,12 @@
 import React from 'react';
 import AppNavigator from './AppNavigator';
+import { UserProvider } from './provider/userProvider';
 
 
 export default function App() {
   return (
-    <AppNavigator/>
+    <UserProvider>
+         <AppNavigator/>
+    </UserProvider>
   );
 }

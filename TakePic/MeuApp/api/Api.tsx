@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 const URL = 'https://api-site-imagens.onrender.com/';
 const StatusOk = [200, 201, 202]
 
+
 export function TOKEN_POST(body: object) {
   return {
     url: `${URL}auth/login`,
@@ -218,8 +219,8 @@ export async function SEND_REQUEST(url: string, options: object) {
       let responseJson = await response.json();
       return {"status": true, "httpCode": response.status, "data": responseJson}; 
     }
-
-    return {"status": false, "httpCode": response.status, "data": response};
+    
+    return {"status": false, "httpCode": response.status, "data": response, error: (await response.json()).message};
   } catch (error) {
     return {"status": false, "httpCode": 500, "data": error}
   } 
