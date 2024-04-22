@@ -16,10 +16,10 @@ const Footer: React.FC<FooterProps> = ({data}) => {
   const navigation = useNavigation();
 
   const redirecionarPagina = () => {
-    if (data.text2 === "cadastrar") {
-      navigation.navigate('CadastroScreen');
+    if (data.text2 === "Cadastre-se") {
+      navigation.navigate('CadastroScreen' as never);
     } else {
-      navigation.navigate('LoginScreen');
+      navigation.navigate('LoginScreen' as never);
     }
   };
 
@@ -27,9 +27,8 @@ const Footer: React.FC<FooterProps> = ({data}) => {
     <View style={styles.container}>
       <Text> {data.text} 
         <TouchableOpacity onPress={redirecionarPagina}>
-          <Text style={styles.signupText}>Clique aqui </Text>
+          <Text style={styles.signupText}> {data.text2} aqui </Text>
         </TouchableOpacity>
-        para {data.text2}
       </Text>
     </View>
   );

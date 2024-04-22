@@ -6,7 +6,7 @@ import CadastrarForm from "../components/CadastrarForm/cadastrarform";
 
 const footerData = {
     text: "Já possui conta? ",
-    text2: "logar"
+    text2: "Logue-se"
 }
 
 const CadastroPage = () => {

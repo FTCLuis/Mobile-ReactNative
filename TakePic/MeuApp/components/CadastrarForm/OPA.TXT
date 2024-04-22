@@ -1,0 +1,18 @@
+ // TESTEteste
+    // TESTE
+    // TESTEtesteTeste
+
+  //   {
+  //     "usuario": "TESTEtesteTeste",
+  //     "email": "teste@teste",
+  //     "senha": "teste123",
+  //     "dataNasc": "2024-04-19T23:40:57.432Z",
+  //     "dataAtual": "2024-04-19T23:40:57.432Z",
+  //     "requestRegister": {
+  //         "status": true,
+  //         "httpCode": 201,
+  //         "data": {
+  //             "message": "Usuário \"TESTEtesteTeste\" criado com sucesso."
+  //         }
+  //     }
+  // }

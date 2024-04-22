@@ -25,6 +25,8 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+
+    "packagerOpts": { "url": "https://api-site-imagens.onrender.com" } 
   }
 }
