@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Importe o ícone desejado
-import getStyles from './styles';
+import getStyles from './style';
 
 interface ModalProps {
   visible: boolean;

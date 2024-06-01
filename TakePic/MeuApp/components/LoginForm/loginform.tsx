@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import styles from './style';
 import { SEND_REQUEST, TOKEN_POST, USER_GET } from '../../api/Api';   
 import { useUser } from '../../provider/userProvider';
 import { useNavigation } from '@react-navigation/native';
-import AlertModal from '../alertModal/AlertModal';
+import AlertModal from '../alertModal/alertModal';
 
 
 const LoginForm = () => {
@@ -13,6 +13,9 @@ const LoginForm = () => {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const [loading, setLoading] = useState(false);
+  const [MessageType, setMessageType] = useState('');
 
   useEffect(() => {
     if (user.isLogged) {
@@ -27,15 +30,18 @@ const LoginForm = () => {
 
   const login = async () => {
     if ( !email || !password ) {
-      setErrorMessage("Algum campo não foi informado!")
+      setErrorMessage("Algum campo não foi informado!");
+      setMessageType("error")
       setModalVisible(true); 
       return;
     }
 
+    setLoading(true);
     let getTokenData = await TOKEN_POST({"email": email, "senha": password});
     let requestToken = await SEND_REQUEST(getTokenData.url, getTokenData.options);
     if (!requestToken.status) {
       setErrorMessage(requestToken.error ? requestToken.error : 'Erro ao fazer login');
+      setMessageType("error")
       setModalVisible(true); 
       setLoading(false);
       return;
@@ -43,6 +49,7 @@ const LoginForm = () => {
 
     if (!requestToken.data || !requestToken.data.access_token) {
       setErrorMessage('Sem Dados!');
+      setMessageType("error")
       setLoading(false);
       setModalVisible(true); 
       return;
@@ -52,6 +59,7 @@ const LoginForm = () => {
     let requestUser = await SEND_REQUEST(getUser.url, getUser.options);
     if (!requestUser.status) {
       setErrorMessage(requestUser.error ? requestUser.error : 'Erro ao carregar Usuario');
+      setMessageType("error")
       setModalVisible(true); 
       setLoading(false);
       return;
@@ -59,14 +67,19 @@ const LoginForm = () => {
 
     if (!requestUser.data) {
       setErrorMessage('Sem Dados!');
+      setMessageType("error")
       setLoading(false);
       setModalVisible(true); 
       return;
     }
 
+    setErrorMessage('Logado com sucesso!');
+    setModalVisible(true); 
+    setMessageType("success")
     user.toggleLogged()
     requestUser.data.token = requestToken.data.access_token
     user.setUser(requestUser.data)
+    setLoading(false);
   };
 
   return (
