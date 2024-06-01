@@ -15,12 +15,17 @@ const initialUser: userModel = {
     token: "",
 };
   
-const UserContext = createContext({
-    isLogged: false,
-    toggleLogged: () => {},
-    setUser: (usrData: userModel) => {},
-    getUser: () => {}
-  });
+const UserContext = createContext<{
+  isLogged: boolean;
+  toggleLogged: () => void;
+  setUser: (usrData: userModel) => void;
+  getUser: () => userModel;
+}>({
+  isLogged: false,
+  toggleLogged: () => {},
+  setUser: () => {},
+  getUser: () => initialUser
+});
 
 
 interface UserProviderProps {

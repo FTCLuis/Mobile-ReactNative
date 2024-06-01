@@ -12,7 +12,7 @@ const LoginForm = () => {
 
   useEffect(() => {
     if (user.isLogged) {
-      navigation.navigate('CadastroScreen' as never); //home
+      navigation.navigate('MinhaContaScreen' as never); //home
     }
   }, [user.isLogged, navigation]); 
   

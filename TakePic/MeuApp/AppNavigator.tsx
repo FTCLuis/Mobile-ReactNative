@@ -2,6 +2,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import {NavigationContainer} from '@react-navigation/native';
 import Login from "./screens/login";
 import Cadastro from "./screens/cadastro";
+import MinhaConta from "./screens/minhaConta";
 
 const Stack = createStackNavigator();
 
@@ -21,8 +22,13 @@ function AppNavigator(){
                     headerTransparent: true,
                     headerShown: false,
                 }} name="CadastroScreen" component={Cadastro} />
-                {/* <Stack.Screen name="AddLivroScreen" component={AddLivro} />
-                <Stack.Screen name="ViewLivroScreen" component={ViewLivro} /> */}
+
+                <Stack.Screen options={{
+                    title: "",
+                    headerTransparent: true,
+                    headerShown: false,
+                }} name="MinhaContaScreen" component={MinhaConta} />
+                
 
             </Stack.Navigator>
         </NavigationContainer>
