@@ -5,10 +5,10 @@ const getStyles = (type: 'success' | 'error' | 'warning') => {
   let ModalbackgroundColor;
   switch (type) {
     case 'success':
-      ModalbackgroundColor = 'hotpink';
+      ModalbackgroundColor = '#4CAF50';
       break;
     case 'error':
-      ModalbackgroundColor = 'hotpink';
+      ModalbackgroundColor = '#F44336';
       break;
     case 'warning':
       ModalbackgroundColor = 'hotpink';

@@ -15,7 +15,7 @@ const LoginForm = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [MessageType, setMessageType] = useState('');
+  const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
 
   useEffect(() => {
     if (user.isLogged) {
@@ -73,9 +73,9 @@ const LoginForm = () => {
       return;
     }
 
+    setMessageType("success")
     setErrorMessage('Logado com sucesso!');
     setModalVisible(true); 
-    setMessageType("success")
     user.toggleLogged()
     requestUser.data.token = requestToken.data.access_token
     user.setUser(requestUser.data)
@@ -104,7 +104,7 @@ const LoginForm = () => {
           </View>
       </Modal>
 
-      <AlertModal visible={modalVisible} message={errorMessage} type="error" onClose={() => setModalVisible(false)} />
+      <AlertModal visible={modalVisible} message={errorMessage} type={MessageType} onClose={() => setModalVisible(false)} />
     </View>
   );
 };
