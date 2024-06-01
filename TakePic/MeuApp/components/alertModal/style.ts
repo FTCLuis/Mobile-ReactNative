@@ -1,22 +1,20 @@
 import { StyleSheet } from 'react-native';
-import { useTheme } from '../../../../providers/themeProvider';
 
 const getStyles = (type: 'success' | 'error' | 'warning') => {
-  const theme = useTheme();
 
   let ModalbackgroundColor;
   switch (type) {
     case 'success':
-      ModalbackgroundColor = theme.theme.BackgroundSuccess;
+      ModalbackgroundColor = 'hotpink';
       break;
     case 'error':
-      ModalbackgroundColor = theme.theme.BackgroundError;
+      ModalbackgroundColor = 'hotpink';
       break;
     case 'warning':
-      ModalbackgroundColor = theme.theme.BackgroundWarning;
+      ModalbackgroundColor = 'hotpink';
       break;
     default:
-      ModalbackgroundColor = theme.theme.BackgroundSecondary;
+      ModalbackgroundColor = 'hotpink';
       break;
   }
 
@@ -36,7 +34,7 @@ const getStyles = (type: 'success' | 'error' | 'warning') => {
       position: 'relative',
     },
     modalText: {
-      color: theme.theme.ColorPrimary,
+      color: 'white',
       fontSize: 16,
       textAlign: 'center',
     },
@@ -48,7 +46,7 @@ const getStyles = (type: 'success' | 'error' | 'warning') => {
       alignSelf: 'flex-end',
     },
     closeButtonText: {
-      color: theme.theme.ColorSecondary,
+      color: 'gray',
       fontSize: 16,
     },
   });

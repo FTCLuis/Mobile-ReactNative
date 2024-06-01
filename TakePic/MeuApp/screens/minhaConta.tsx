@@ -34,9 +34,6 @@ const MinhaConta = () => {
         </View>
       </View>
       
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Mostrando Publicações</Text>
-      </View>
     </View>
   );
 }
