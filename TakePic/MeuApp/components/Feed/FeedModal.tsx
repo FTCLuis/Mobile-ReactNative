@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../provider/userProvider';
 import FeedButtonEdit from './FeedButtonEdit';
 import FeedButtonDelete from './FeedButtonDelete';
-import { CREATE_COMMENT } from '../../api/Api';
+import { CREATE_COMMENT, DELETE_COMMENT } from '../../api/Api';
 import useFetch from '../../Hooks/useFetch';
 import Error from '../Helper/Error';
 
@@ -54,6 +54,24 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    const token = user.getUser().token;
+    if (!token) {
+      console.error("Token not found");
+      return;
+    }
+
+    const { url, options } = DELETE_COMMENT(commentId, token);
+    const { response } = await request(url, options);
+    if (response && response.ok) {
+      // Atualizar a lista de comentários
+      const updatedComments = photo.comentarios.filter((comment) => comment._id !== commentId);
+      photo.comentarios = updatedComments;
+    } else {
+      console.error("Failed to delete comment");
+    }
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -80,7 +98,7 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
                   {comentario.usuario === currentUser && (
                     <View style={styles.buttonContainer}>
                       <FeedButtonEdit />
-                      <FeedButtonDelete />
+                      <FeedButtonDelete commentId={comentario._id} onDelete={handleDeleteComment} />
                     </View>
                   )}
                 </View>
@@ -97,7 +115,7 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
               onChangeText={setCommentText}
             />
             <TouchableOpacity style={styles.postButton} onPress={handlePostComment} disabled={loading}>
-              <Text style={styles.postButtonText}>{loading ? 'Postando...' : 'Postar'}</Text>
+              <Text style={styles.postButtonText}>Postar</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -148,6 +148,20 @@ export function CREATE_COMMENT(body: object, id: string, token: string) {
   };
 }
 
+export function DELETE_COMMENT(id: string, token: string) {
+
+  return {
+    url: `${URL}comment/remove/${id}`,
+    options: {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      }
+    },
+  };
+}
+
 export function PHOTO_EDIT_COMMENT(
   body: object,
   token: string,
