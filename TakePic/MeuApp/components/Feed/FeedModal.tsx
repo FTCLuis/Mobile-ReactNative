@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, View, StyleSheet, Text, TouchableOpacity, Image, TextInput, Dimensions, ScrollView } from 'react-native';
+import { Modal, View, StyleSheet, Text, TouchableOpacity, Image, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../provider/userProvider';
 import FeedButtonEdit from './FeedButtonEdit';
@@ -23,8 +23,10 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
 
   const user = useUser();
   const currentUser = user.getUser().usuario;
-  const { request, loading, error } = useFetch();
+  const { request, loading: postingLoading, error } = useFetch();
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState('');
+  const [postingComment, setPostingComment] = useState(false); // Estado para controlar o envio do comentário
 
   const handlePostComment = async () => {
     if (!commentText.trim()) return;
@@ -44,6 +46,8 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
       token,
     );
 
+    setPostingComment(true); // Ativar "Postando..." no botão de postagem
+
     const { response, json } = await request(url, options);
     if (response && response.ok) {
       setCommentText('');
@@ -52,9 +56,12 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
     } else {
       console.error("Failed to post comment");
     }
+
+    setPostingComment(false); // Desativar "Postando..." no botão de postagem
   };
 
   const handleDeleteComment = async (commentId: string) => {
+    setDeletingCommentId(commentId);
     const token = user.getUser().token;
     if (!token) {
       console.error("Token not found");
@@ -70,6 +77,7 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
     } else {
       console.error("Failed to delete comment");
     }
+    setDeletingCommentId(null);
   };
 
   return (
@@ -98,7 +106,11 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
                   {comentario.usuario === currentUser && (
                     <View style={styles.buttonContainer}>
                       <FeedButtonEdit />
-                      <FeedButtonDelete commentId={comentario._id} onDelete={handleDeleteComment} />
+                      <FeedButtonDelete 
+                        commentId={comentario._id} 
+                        onDelete={handleDeleteComment} 
+                        deleting={deletingCommentId === comentario._id} 
+                      />
                     </View>
                   )}
                 </View>
@@ -114,8 +126,14 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
               value={commentText}
               onChangeText={setCommentText}
             />
-            <TouchableOpacity style={styles.postButton} onPress={handlePostComment} disabled={loading}>
-              <Text style={styles.postButtonText}>Postar</Text>
+            <TouchableOpacity 
+              style={styles.postButton} 
+              onPress={handlePostComment} 
+              disabled={postingLoading || postingComment} // Desabilitar durante o envio
+            >
+              <Text style={styles.postButtonText}>
+                {postingComment ? 'Postando...' : 'Postar'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
