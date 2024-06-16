@@ -7,6 +7,8 @@ import Error from '../Helper/Error';
 import HeaderFeeds from '../Header/headerFeeds';
 import Header from '../Header/header';
 import FeedModal from './FeedModal';
+import { userModel } from '../../models/userModel';
+import { useUser } from '../../provider/userProvider';
 
 interface FeedPhotosProps {
   setModalPhoto: React.Dispatch<React.SetStateAction<any>>;
@@ -20,6 +22,7 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
   const { data, request, loading, error } = useFetch();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
+  const user: userModel | void = useUser().getUser();
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -41,11 +44,16 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
     setSelectedPhoto(null);
     setModalVisible(false);
   };
-  
+
+  const headerData = {
+    textHeader: user.usuario,
+    icon: 'person-circle-outline'
+  }
+
   if (data) {
     return (
       <ScrollView style={styles.container}>
-        <Header />
+        <Header data={headerData} />
         <HeaderFeeds screen={'FeedGeralScreen'} />
         <FlatList
           data={data}
