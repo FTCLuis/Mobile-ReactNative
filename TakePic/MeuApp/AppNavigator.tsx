@@ -4,6 +4,7 @@ import Login from "./screens/login";
 import Cadastro from "./screens/cadastro";
 import MinhaConta from "./screens/minhaConta";
 import Feed from "./components/Feed/Feed";
+import FeedSeguindo from "./components/Feed/FeedSeguindo";
 
 const Stack = createStackNavigator();
 
@@ -35,6 +36,12 @@ function AppNavigator() {
                     headerTransparent: true,
                     headerShown: false,
                 }} name="FeedGeralScreen" component={Feed} />
+
+                <Stack.Screen options={{
+                    title: "",
+                    headerTransparent: true,
+                    headerShown: false,
+                }} name="FeedSeguindoScreen" component={FeedSeguindo} />
 
 
             </Stack.Navigator>

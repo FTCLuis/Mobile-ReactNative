@@ -1,14 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { GET_POST_USER } from '../../api/Api';
-import useFetch from '../../Hooks/useFetch';
-import FeedPhotosItem from './FeedPhotosItem';
-import FeedModal from './FeedModal';
-import { useUser } from '../../provider/userProvider';
-import { userModel } from '../../models/userModel';
-import Header from '../Header/header';
-import HeaderFeeds from '../Header/headerFeeds';
-
+import { GET_POST_USER } from '../api/Api';
+import useFetch from '../Hooks/useFetch';
+import FeedPhotosItem from '../components/Feed/FeedPhotosItem';
+import FeedModal from '../components/Feed/FeedModal';
+import { useUser } from '../provider/userProvider';
+import { userModel } from '../models/userModel';
 
 const FeedSeguindo: React.FC = () => {
   const user:userModel = useUser().getUser();
@@ -38,8 +35,7 @@ const FeedSeguindo: React.FC = () => {
       {modalPhoto && (
         <FeedModal photo={modalPhoto} setModalPhoto={setModalPhoto} />
       )}
-      <Header/>
-      <HeaderFeeds/>
+
       <View style={styles.feed}>
         {loading && <Text>Carregando...</Text>}
         {foto.map((obj) =>

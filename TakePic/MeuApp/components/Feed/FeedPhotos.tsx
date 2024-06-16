@@ -1,15 +1,27 @@
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet, FlatList, Text, TouchableOpacity } from 'react-native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import useFetch from '../../Hooks/useFetch';
 import { GET_POSTS } from '../../api/Api';
 import FeedPhotosItem from './FeedPhotosItem';
 import Error from '../Helper/Error';
+import HeaderFeeds from '../Header/headerFeeds';
+import Header from '../Header/header';
 
 interface FeedPhotosProps {
   setModalPhoto: React.Dispatch<React.SetStateAction<any>>;
 }
 
+interface Photo {
+  pathFotoPost: string;
+}
+
+type RootStackParamList = {
+  FeedSeguindoScreen: undefined;
+};
+
 const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { data, request, loading, error } = useFetch();
 
   useEffect(() => {
@@ -26,32 +38,18 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
   if (data) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>TakePic</Text>
-          <View style={styles.headerRight}>
-            <Text style={styles.username}>benicioCanalha</Text>
-          </View>
-        </View>
-        <View style={styles.tabContainer}>
-          <TouchableOpacity style={styles.tabButton}>
-            <Text style={styles.tabTextActive}>Feed Geral</Text>
-            <View style={styles.activeIndicator} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tabButton}>
-            <Text style={styles.tabText}>Seguindo</Text>
-          </TouchableOpacity>
-        </View>
+        <Header/>
+        <HeaderFeeds/>
         <FlatList
           data={data}
           numColumns={2}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item }) => (
             <View style={styles.column}>
-              {item.posts.map((photo: any) => (
+              {item.posts.map((photo: Photo) => (
                 <FeedPhotosItem
-                  key={photo._id}
-                  photo={photo}
-                  setModalPhoto={setModalPhoto}
+                photo={photo}
+                setModalPhoto={setModalPhoto}
                 />
               ))}
             </View>
