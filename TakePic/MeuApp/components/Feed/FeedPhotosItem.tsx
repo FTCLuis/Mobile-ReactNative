@@ -1,34 +1,28 @@
 import React from 'react';
-import { View, TouchableOpacity, Image, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Image, StyleSheet, Dimensions, View } from 'react-native';
 
 interface FeedPhotosItemProps {
   photo: {
-    pathFotoPost: string; // Defina o tipo apropriado para pathFotoPost
+    pathFotoPost: string;
   };
-  setModalPhoto: React.Dispatch<React.SetStateAction<any>>; // Defina o tipo apropriado para setModalPhoto
+  onPress: () => void; // Alterado para onPress
 }
 
-const FeedPhotosItem: React.FC<FeedPhotosItemProps> = ({ photo, setModalPhoto }) => {
-  function handleClick() {
-    setModalPhoto(photo);
-  }
+const FeedPhotosItem: React.FC<FeedPhotosItemProps> = ({ photo, onPress }) => {
+  const size = Dimensions.get('window').width / 2 - 15;
 
   return (
-    <TouchableOpacity style={styles.photo} onPress={handleClick}>
-      <Image source={{ uri: photo.pathFotoPost }} style={styles.image} />
-      {/* <Text>Visualizar</Text> */}
+    <TouchableOpacity style={styles.photo} onPress={onPress}>
+      <View>
+        <Image source={{ uri: photo.pathFotoPost }} resizeMode="cover" />
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   photo: {
-    marginVertical: 10,
-    alignItems: 'center',
-  },
-  image: {
-    width: '100%',
-    height: 100,
+    margin: 5,
   },
 });
 
