@@ -1,15 +1,27 @@
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
 import useFetch from '../../Hooks/useFetch';
 import { GET_POSTS } from '../../api/Api';
 import Error from '../Helper/Error';
+import HeaderFeeds from '../Header/headerFeeds';
+import Header from '../Header/header';
 import FeedModal from './FeedModal';
 
 interface FeedPhotosProps {
   setModalPhoto: React.Dispatch<React.SetStateAction<any>>;
 }
 
+interface Photo {
+  pathFotoPost: string;
+}
+
+type RootStackParamList = {
+  FeedSeguindoScreen: undefined;
+};
+
 const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { data, request, loading, error } = useFetch();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
@@ -24,7 +36,7 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
 
   if (error) return <Error error={error} />;
   if (loading) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
-
+  
   const handlePhotoClick = (photo: any) => {
     setSelectedPhoto(photo);
     setModalVisible(true);
@@ -35,23 +47,11 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
     setModalVisible(false);
   };
 
+  if (data) {
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>TakePic</Text>
-        <View style={styles.headerRight}>
-          <Text style={styles.username}>benicioCanalha</Text>
-        </View>
-      </View>
-      <View style={styles.tabContainer}>
-        <TouchableOpacity style={styles.tabButton}>
-          <Text style={styles.tabTextActive}>Feed Geral</Text>
-          <View style={styles.activeIndicator} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabButton}>
-          <Text style={styles.tabText}>Seguindo</Text>
-        </TouchableOpacity>
-      </View>
+      <Header/>
+      <HeaderFeeds/>
       <FlatList
         data={data}
         numColumns={2}
