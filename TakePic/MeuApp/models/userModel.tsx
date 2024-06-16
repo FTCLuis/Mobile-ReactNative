@@ -11,3 +11,15 @@ export interface userModel {
     __v: string,
     token: string,
 }
+
+export interface userPost {
+    atualizadoEm : Date,
+    comentarios : [],
+    criadoEm : Date,
+    curtidas : [],
+    descricaoPost: string,
+    pathFotoPost: string
+    tags: []
+    usuario: string
+    _id: string
+}

@@ -9,10 +9,15 @@ const footerData = {
     text2: "Logue-se"
 }
 
+const headerData = {
+    textHeader: 'Login / Registrar-se',
+    icon: ''
+}
+
 const CadastroPage = () => {
     return (
         <View style={{flex: 1}}>
-            <Header/>
+            <Header data={headerData}/>
             <View style={{paddingHorizontal: 20, flex: 1, marginTop: 26}}>
                 <Text style={{ fontSize: 38, marginBottom: 5, marginTop: 10, fontWeight: "bold" }}>Cadastro</Text>
                 <View style={{ width: 155, backgroundColor: 'hotpink', height: 2, marginBottom: 20, marginLeft: 3 }} />
