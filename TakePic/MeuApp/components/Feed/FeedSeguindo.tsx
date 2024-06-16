@@ -10,14 +10,16 @@ import Header from '../Header/header';
 import HeaderFeeds from '../Header/headerFeeds';
 
 
+
 const FeedSeguindo: React.FC = () => {
-  const user:userModel = useUser().getUser();
+  const user: userModel | void = useUser().getUser(); 
   const { data, request, loading, error } = useFetch();
   const token = window.localStorage.getItem('token');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [foto, setFoto] = useState<any[]>([]);
   const [modalPhoto, setModalPhoto] = useState<any>(null);
+
 
   const handlePhotoClick = (photo: any) => {
     setSelectedPhoto(photo);
@@ -28,6 +30,11 @@ const FeedSeguindo: React.FC = () => {
     setSelectedPhoto(null);
     setModalVisible(false);
   };
+
+  const headerData = {
+    textHeader: user.usuario,
+    icon: 'person-circle-outline'
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,7 +53,7 @@ const FeedSeguindo: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-        <Header />
+        <Header data={headerData}/>
         <HeaderFeeds screen={'FeedSeguindoScreen'} />
         <FlatList
           data={data}
