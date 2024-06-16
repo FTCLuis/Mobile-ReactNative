@@ -17,6 +17,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginTop: 5
     },
+    icon: {
+        marginLeft: 8,
+        marginTop: 3
+    },
+    userInfo: {
+        flexDirection: 'row',
+    }
 });
 
 export default styles;
