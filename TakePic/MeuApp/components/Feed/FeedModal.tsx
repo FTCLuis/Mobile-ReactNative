@@ -1,15 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, View, StyleSheet, Text, TouchableOpacity, Image, TextInput, Dimensions, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../provider/userProvider';
 import FeedButtonEdit from './FeedButtonEdit';
 import FeedButtonDelete from './FeedButtonDelete';
+import { CREATE_COMMENT } from '../../api/Api';
+import useFetch from '../../Hooks/useFetch';
+import Error from '../Helper/Error';
 
 interface FeedModalProps {
   visible: boolean;
   photo: {
     pathFotoPost: string;
     comentarios: { _id: string; comentarioTexto: string; usuario: string }[];
+    _id: string;
   } | null;
   onClose: () => void;
 }
@@ -19,6 +23,36 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
 
   const user = useUser();
   const currentUser = user.getUser().usuario;
+  const { request, loading, error } = useFetch();
+  const [commentText, setCommentText] = useState('');
+
+  const handlePostComment = async () => {
+    if (!commentText.trim()) return;
+
+    const token = user.getUser().token;
+    if (!token) {
+      console.error("Token not found");
+      return;
+    }
+
+    const { url, options } = CREATE_COMMENT(
+      {
+        usuario: currentUser,
+        comentarioTexto: commentText,
+      },
+      photo._id,
+      token,
+    );
+
+    const { response, json } = await request(url, options);
+    if (response && response.ok) {
+      setCommentText('');
+      // Atualizar a lista de comentários
+      photo.comentarios.push(json);
+    } else {
+      console.error("Failed to post comment");
+    }
+  };
 
   return (
     <Modal
@@ -53,14 +87,17 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
               </View>
             ))}
           </ScrollView>
+          {error && <Error error={error} />}
           <View style={styles.modalContent}>
             <TextInput
               placeholder="Digite seu comentário..."
               style={styles.commentInput}
               multiline
+              value={commentText}
+              onChangeText={setCommentText}
             />
-            <TouchableOpacity style={styles.postButton}>
-              <Text style={styles.postButtonText}>Postar</Text>
+            <TouchableOpacity style={styles.postButton} onPress={handlePostComment} disabled={loading}>
+              <Text style={styles.postButtonText}>{loading ? 'Postando...' : 'Postar'}</Text>
             </TouchableOpacity>
           </View>
         </View>

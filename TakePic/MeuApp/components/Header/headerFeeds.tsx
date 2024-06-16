@@ -22,7 +22,7 @@ const HeaderFeeds: React.FC<HeaderFeedsProps> = ({screen}) => {
             navigation.navigate('FeedSeguindoScreen');
         }
     };
-console.log(screen)
+
     return (
         <View style={styles.container}>
             <View style={styles.tabContainer}>
