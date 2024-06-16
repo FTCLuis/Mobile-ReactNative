@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 
-const HeaderFeeds = () => {
+interface HeaderFeedsProps {
+    screen: 'FeedGeralScreen' | 'FeedSeguindoScreen';
+  }
+
+const HeaderFeeds: React.FC<HeaderFeedsProps> = ({screen}) => {
     type RootStackParamList = {
         FeedSeguindoScreen: undefined;
         FeedGeralScreen: undefined;
     };
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-    const [activeTab, setActiveTab] = useState<'FeedGeralScreen' | 'FeedSeguindoScreen'>('FeedGeralScreen'); // Estado para controlar a aba ativa
+    const [activeTab, setActiveTab] = useState<'FeedGeralScreen' | 'FeedSeguindoScreen'>(screen);
 
     const handlePress = (screen: 'FeedGeralScreen' | 'FeedSeguindoScreen') => {
         setActiveTab(screen);
@@ -18,22 +22,22 @@ const HeaderFeeds = () => {
             navigation.navigate('FeedSeguindoScreen');
         }
     };
-
+console.log(screen)
     return (
         <View style={styles.container}>
             <View style={styles.tabContainer}>
                 <TouchableOpacity 
                     style={styles.tabButton}
                     onPress={() => handlePress('FeedGeralScreen')}>
-                    <Text style={activeTab === 'FeedGeralScreen' ? styles.tabTextActive : styles.tabText}>Feed Geral</Text>
-                    {activeTab === 'FeedGeralScreen' && <View style={styles.activeIndicator} />}
+                    <Text style={[styles.tabText, activeTab === 'FeedGeralScreen' && styles.tabTextActive]}>Feed Geral</Text>
+                    <View style={[styles.activeIndicator, activeTab === 'FeedGeralScreen' ? styles.activeIndicatorActive : null]} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.tabButton}
                     onPress={() => handlePress('FeedSeguindoScreen')}
                 >
-                    <Text style={activeTab === 'FeedSeguindoScreen' ? styles.tabTextActive : styles.tabText}>Seguindo</Text>
-                    {activeTab === 'FeedSeguindoScreen' && <View style={styles.activeIndicator} />}
+                    <Text style={[styles.tabText, activeTab === 'FeedSeguindoScreen' && styles.tabTextActive]}>Seguindo</Text>
+                    <View style={[styles.activeIndicator, activeTab === 'FeedSeguindoScreen' ? styles.activeIndicatorActive : null]} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -49,6 +53,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+        marginBottom: 15
     },
     tabContainer: {
         flexDirection: 'row',
@@ -60,6 +65,7 @@ const styles = StyleSheet.create({
     tabButton: {
         paddingVertical: 10,
         paddingHorizontal: 20,
+        position: 'relative', // Adicionando posição relativa para o TouchableOpacity
     },
     tabText: {
         fontSize: 16,
@@ -70,13 +76,17 @@ const styles = StyleSheet.create({
         color: '#ff1493',
     },
     activeIndicator: {
+        height: 2,
+        backgroundColor: '#ff1493',
+        borderRadius: 1,
+        opacity: 0, // Começa oculto
+    },
+    activeIndicatorActive: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        height: 2,
-        backgroundColor: '#ff1493',
-        borderRadius: 1,
+        opacity: 1, // Torna visível quando ativo
     },
 });
 

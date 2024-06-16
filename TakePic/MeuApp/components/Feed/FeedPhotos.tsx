@@ -16,12 +16,7 @@ interface Photo {
   pathFotoPost: string;
 }
 
-type RootStackParamList = {
-  FeedSeguindoScreen: undefined;
-};
-
 const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { data, request, loading, error } = useFetch();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
@@ -36,7 +31,7 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
 
   if (error) return <Error error={error} />;
   if (loading) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
-  
+
   const handlePhotoClick = (photo: any) => {
     setSelectedPhoto(photo);
     setModalVisible(true);
@@ -46,34 +41,35 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
     setSelectedPhoto(null);
     setModalVisible(false);
   };
-
+  
   if (data) {
-  return (
-    <ScrollView style={styles.container}>
-      <Header/>
-      <HeaderFeeds/>
-      <FlatList
-        data={data}
-        numColumns={2}
-        keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.flatListContainer}
-        renderItem={({ item }) => (
-          <View style={styles.column}>
-            {item.posts.slice(0, 1).map((photo: any) => ( // Renderiza apenas a primeira foto de cada item
-              <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
-                <View style={styles.imageContainer}>
-                  <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      />
+    return (
+      <ScrollView style={styles.container}>
+        <Header />
+        <HeaderFeeds screen={'FeedGeralScreen'} />
+        <FlatList
+          data={data}
+          numColumns={2}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.flatListContainer}
+          renderItem={({ item }) => (
+            <View style={styles.column}>
+              {item.posts.slice(0, 1).map((photo: any) => ( // Renderiza apenas a primeira foto de cada item
+                <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
+                  <View style={styles.imageContainer}>
+                    <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        />
 
-      <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} />
-    </ScrollView>
-  );
-};
+        <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} />
+      </ScrollView>
+    );
+  };
+}
 
 const styles = StyleSheet.create({
   loader: {
