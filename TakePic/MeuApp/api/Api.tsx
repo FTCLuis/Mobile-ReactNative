@@ -195,7 +195,7 @@ export function POST_DELETE(id: string, token: string) {
 
 export function POST_LIKE(body: object, id: string, token: string) {
   return {
-    url: `${URL}post/like/mobile/${id}`,
+    url: `${URL}post/like/${id}`,
     options: {
       method: 'POST',
       headers: {
