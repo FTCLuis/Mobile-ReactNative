@@ -66,10 +66,10 @@ const FeedSeguindo: React.FC = () => {
       if (response && response.ok) {
         setReloadData(true);
       } else {
-        console.error("Failed to delete comment");
+        console.error("Failed to delete post");
       }
     } catch (error) {
-      console.error("Failed to delete comment", error);
+      console.error("Failed to delete post", error);
     } finally {
       setIsDeleting(false);
     }
