@@ -1,47 +1,42 @@
+// FeedModal.tsx
 import React, { useState, useEffect } from 'react';
 import { Modal, View, StyleSheet, Text, TouchableOpacity, Image, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../provider/userProvider';
 import FeedButtonEdit from './FeedButtonEdit';
 import FeedButtonDelete from './FeedButtonDelete';
-import FeedButtonDeletePost from './FeedButtonDeletePost';
-import { CREATE_COMMENT, DELETE_COMMENT, PHOTO_EDIT_COMMENT, POST_DELETE } from '../../api/Api';
 import FeedLikePost from './FeedLikePost';
+import { CREATE_COMMENT, DELETE_COMMENT, PHOTO_EDIT_COMMENT } from '../../api/Api';
 import useFetch from '../../Hooks/useFetch';
 import Error from '../Helper/Error';
 
 interface FeedModalProps {
   visible: boolean;
   photo: {
-    usuario: string;
     pathFotoPost: string;
     comentarios: { _id: string; comentarioTexto: string; usuario: string }[];
     _id: string;
     curtidas: string[];
   } | null;
   onClose: () => void;
-  onDeletePost: (postId: string) => void;
 }
 
-const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose, onDeletePost }) => {
+const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
   if (!visible || !photo) return null;
 
   const user = useUser();
   const currentUser = user.getUser().usuario;
   const { request, loading: postingLoading, error } = useFetch();
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
-  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedCommentText, setEditedCommentText] = useState('');
   const [commentText, setCommentText] = useState('');
   const [postingComment, setPostingComment] = useState(false);
-
   const [likedUsers, setLikedUsers] = useState<string[]>(photo.curtidas || []);
 
   useEffect(() => {
     setLikedUsers(photo.curtidas || []);
   }, [photo.curtidas]);
-
 
   const handlePostComment = async () => {
     if (!commentText.trim()) return;
@@ -93,26 +88,6 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose, onDelete
     }
     setDeletingCommentId(null);
   };
-
-  const handleDeletePost = async (postId: string) => {
-    setDeletingPostId(postId);
-    const token = user.getUser().token;
-    if (!token) {
-      console.error("Token not found");
-      return;
-    }
-
-    const { url, options } = POST_DELETE(postId, token);
-    const { response } = await request(url, options);
-    if (response && response.ok) {
-      onDeletePost(postId);
-      onClose();
-    } else {
-      console.error("Failed to delete comment");
-    }
-    setDeletingPostId(null);
-
-  }
 
   const handleStartEditingComment = (commentId: string, initialCommentText: string) => {
     setEditingCommentId(commentId);
@@ -235,9 +210,6 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose, onDelete
                 {postingComment ? 'Postando...' : 'Postar'}
               </Text>
             </TouchableOpacity>
-            {photo.usuario === currentUser && (
-              <FeedButtonDeletePost postId={photo._id} onDelete={handleDeletePost} deleting={deletingPostId === photo._id} />
-            )}
           </View>
         </View>
       </View>
@@ -317,7 +289,7 @@ const styles = StyleSheet.create({
   },
   postButton: {
     backgroundColor: '#ff1493',
-    borderRadius: 5,
+    borderRadius: 10,
     padding: 15,
     alignItems: 'center',
     marginTop: 10,
