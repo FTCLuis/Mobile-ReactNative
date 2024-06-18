@@ -50,6 +50,48 @@ const FeedSeguindo: React.FC = () => {
   if (error) return <Error error={error} />;
   if (loading) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
 
+  const handlePhotoClick = (photo: any) => {
+    setSelectedPhoto(photo);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setSelectedPhoto(null);
+    setModalVisible(false);
+  };
+
+  const onDeletePost = async (postId: string) => {
+    setIsDeleting(true);
+
+    const updatedPosts = posts.filter(post => post._id !== postId);
+    setPosts(updatedPosts);
+
+    try {
+      const token = user.token;
+      if (!token) {
+        console.error("Token not found");
+        return;
+      }
+
+      const { url, options } = POST_DELETE(postId, token);
+      const { response } = await request(url, options);
+      if (response && response.ok) {
+        setReloadData(true);
+      } else {
+        console.error("Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Failed to delete post", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const headerData = {
+    textHeader: user?.usuario || '',
+    icon: 'person-circle-outline'
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Header data={headerData} />
