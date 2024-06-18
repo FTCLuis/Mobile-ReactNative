@@ -1,8 +1,8 @@
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, Text, TouchableOpacity, Image, Dimensions, Animated } from 'react-native'; // Importe Animated
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
 import useFetch from '../../Hooks/useFetch';
-import { GET_POSTS, POST_DELETE } from '../../api/Api';
+import { GET_POSTS } from '../../api/Api';
 import Error from '../Helper/Error';
 import HeaderFeeds from '../Header/headerFeeds';
 import Header from '../Header/header';
@@ -22,53 +22,18 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
   const { data, request, loading, error } = useFetch();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [reloadData, setReloadData] = useState(false); 
-  const [isDeleting, setIsDeleting] = useState(false); 
   const user: userModel | void = useUser().getUser();
 
   useEffect(() => {
+    const fetchPhotos = async () => {
+      const { url, options } = GET_POSTS();
+      await request(url, options);
+    };
     fetchPhotos();
-  }, [request, reloadData]); 
+  }, [request]);
 
-  const fetchPhotos = async () => {
-    const { url, options } = GET_POSTS();
-    const { json } = await request(url, options);
-    if (json) {
-      setPosts(json); 
-    }
-  };
-
-  const onDeletePost = async (postId: string) => {
-    setIsDeleting(true); 
-
-    const updatedPosts = posts.filter(post => post._id !== postId);
-    setPosts(updatedPosts);
-    
-    try {
-      const token = user.token;
-      if (!token) {
-        console.error("Token not found");
-        return;
-      }
-
-      const { url, options } = POST_DELETE(postId, token);
-      const { response } = await request(url, options);
-      if (response && response.ok) {
-        setReloadData(true); 
-      } else {
-        console.error("Failed to delete comment");
-      }
-    } catch (error) {
-      console.error("Failed to delete comment", error);
-    } finally {
-      setIsDeleting(false); 
-    }
-  };
-
-  const reloadDataHandler = () => {
-    setReloadData(true);
-  };
+  if (error) return <Error error={error} />;
+  if (loading) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
 
   const handlePhotoClick = (photo: any) => {
     setSelectedPhoto(photo);
@@ -85,36 +50,34 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
     icon: 'person-circle-outline'
   }
 
-  if (error) return <Error error={error} />;
-  
-  if (loading && !isDeleting) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
+  if (data) {
+    return (
+      <ScrollView style={styles.container}>
+        <Header data={headerData} />
+        <HeaderFeeds screen={'FeedGeralScreen'} />
+        <FlatList
+          data={data}
+          numColumns={2}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.flatListContainer}
+          renderItem={({ item }) => (
+            <View style={styles.column}>
+              {item.posts.slice(0, 1).map((photo: any) => ( // Renderiza apenas a primeira foto de cada item
+                <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
+                  <View style={styles.imageContainer}>
+                    <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        />
 
-  return (
-    <ScrollView style={styles.container}>
-      <Header data={headerData} />
-      <HeaderFeeds screen={'FeedGeralScreen'} />
-      <FlatList
-        data={data}
-        numColumns={2}
-        keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.flatListContainer}
-        renderItem={({ item }) => (
-          <View style={styles.column}>
-            {item.posts.slice(0, 1).map((photo: any) => ( 
-              <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
-                <View style={styles.imageContainer}>
-                  <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      />
-
-      <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} onDeletePost={onDeletePost} />
-    </ScrollView>
-  );
-};
+        <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} />
+      </ScrollView>
+    );
+  };
+}
 
 const styles = StyleSheet.create({
   loader: {
@@ -125,6 +88,52 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  username: {
+    fontSize: 16,
+    marginRight: 10,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  tabButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  tabText: {
+    fontSize: 16,
+    color: '#888',
+  },
+  tabTextActive: {
+    fontSize: 16,
+    color: '#ff1493',
+  },
+  activeIndicator: {
+    marginTop: 5,
+    height: 2,
+    backgroundColor: '#ff1493',
+    borderRadius: 1,
   },
   flatListContainer: {
     paddingHorizontal: 10,
