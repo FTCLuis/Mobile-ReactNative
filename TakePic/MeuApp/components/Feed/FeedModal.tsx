@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+// FeedModal.tsx
+import React, { useState, useEffect } from 'react';
 import { Modal, View, StyleSheet, Text, TouchableOpacity, Image, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../provider/userProvider';
 import FeedButtonEdit from './FeedButtonEdit';
 import FeedButtonDelete from './FeedButtonDelete';
+import FeedLikePost from './FeedLikePost';
 import { CREATE_COMMENT, DELETE_COMMENT, PHOTO_EDIT_COMMENT } from '../../api/Api';
 import useFetch from '../../Hooks/useFetch';
 import Error from '../Helper/Error';
@@ -14,6 +16,7 @@ interface FeedModalProps {
     pathFotoPost: string;
     comentarios: { _id: string; comentarioTexto: string; usuario: string }[];
     _id: string;
+    curtidas: string[];
   } | null;
   onClose: () => void;
 }
@@ -28,7 +31,12 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedCommentText, setEditedCommentText] = useState('');
   const [commentText, setCommentText] = useState('');
-  const [postingComment, setPostingComment] = useState(false); 
+  const [postingComment, setPostingComment] = useState(false);
+  const [likedUsers, setLikedUsers] = useState<string[]>(photo.curtidas || []);
+
+  useEffect(() => {
+    setLikedUsers(photo.curtidas || []);
+  }, [photo.curtidas]);
 
   const handlePostComment = async () => {
     if (!commentText.trim()) return;
@@ -48,7 +56,7 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
       token,
     );
 
-    setPostingComment(true); 
+    setPostingComment(true);
 
     const { response, json } = await request(url, options);
     if (response && response.ok) {
@@ -59,7 +67,7 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
       console.error("Failed to post comment");
     }
 
-    setPostingComment(false); 
+    setPostingComment(false);
   };
 
   const handleDeleteComment = async (commentId: string) => {
@@ -120,6 +128,10 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
     }
   };
 
+  const handleLikeChange = (newLikedUsers: string[]) => {
+    setLikedUsers(newLikedUsers);
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -135,6 +147,11 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
           <View style={styles.modalImageContainer}>
             <Image source={{ uri: photo.pathFotoPost }} style={styles.modalImage} resizeMode="contain" />
           </View>
+          <FeedLikePost 
+            postId={photo._id}
+            likedUsers={likedUsers}
+            onLikeChange={handleLikeChange}
+          />
           <ScrollView style={styles.commentsContainer}>
             {photo.comentarios.map((comentario) => (
               <View key={comentario._id} style={styles.comment}>
@@ -161,14 +178,12 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
                       </Text>
                       {comentario.usuario === currentUser && (
                         <View style={styles.buttonContainer}>
-                          <FeedButtonEdit
-                            onPress={() => handleStartEditingComment(comentario._id, comentario.comentarioTexto)}
-                          />
-                          <FeedButtonDelete
-                            commentId={comentario._id}
-                            onDelete={handleDeleteComment}
-                            deleting={deletingCommentId === comentario._id}
-                          />
+                          <TouchableOpacity onPress={() => handleStartEditingComment(comentario._id, comentario.comentarioTexto)}>
+                            <Ionicons name="create-outline" size={24} color="#333" />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => handleDeleteComment(comentario._id)}>
+                            <Ionicons name="trash-outline" size={24} color="#333" />
+                          </TouchableOpacity>
                         </View>
                       )}
                     </>
@@ -176,8 +191,8 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
                 </View>
               </View>
             ))}
+            {error && <Error error={error} />}
           </ScrollView>
-          {error && <Error error={error} />}
           <View style={styles.modalContent}>
             <TextInput
               placeholder="Digite seu comentário..."
@@ -189,7 +204,7 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
             <TouchableOpacity
               style={styles.postButton}
               onPress={handlePostComment}
-              disabled={postingLoading || postingComment} 
+              disabled={postingLoading || postingComment}
             >
               <Text style={styles.postButtonText}>
                 {postingComment ? 'Postando...' : 'Postar'}
