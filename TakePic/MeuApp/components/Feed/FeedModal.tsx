@@ -4,31 +4,35 @@ import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../provider/userProvider';
 import FeedButtonEdit from './FeedButtonEdit';
 import FeedButtonDelete from './FeedButtonDelete';
-import { CREATE_COMMENT, DELETE_COMMENT, PHOTO_EDIT_COMMENT } from '../../api/Api';
+import FeedButtonDeletePost from './FeedButtonDeletePost';
+import { CREATE_COMMENT, DELETE_COMMENT, PHOTO_EDIT_COMMENT, POST_DELETE } from '../../api/Api';
 import useFetch from '../../Hooks/useFetch';
 import Error from '../Helper/Error';
 
 interface FeedModalProps {
   visible: boolean;
   photo: {
+    usuario: string;
     pathFotoPost: string;
     comentarios: { _id: string; comentarioTexto: string; usuario: string }[];
     _id: string;
   } | null;
   onClose: () => void;
+  onDeletePost: (postId: string) => void;
 }
 
-const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
+const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose, onDeletePost }) => {
   if (!visible || !photo) return null;
 
   const user = useUser();
   const currentUser = user.getUser().usuario;
   const { request, loading: postingLoading, error } = useFetch();
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedCommentText, setEditedCommentText] = useState('');
   const [commentText, setCommentText] = useState('');
-  const [postingComment, setPostingComment] = useState(false); 
+  const [postingComment, setPostingComment] = useState(false);
 
   const handlePostComment = async () => {
     if (!commentText.trim()) return;
@@ -48,7 +52,7 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
       token,
     );
 
-    setPostingComment(true); 
+    setPostingComment(true);
 
     const { response, json } = await request(url, options);
     if (response && response.ok) {
@@ -59,7 +63,7 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
       console.error("Failed to post comment");
     }
 
-    setPostingComment(false); 
+    setPostingComment(false);
   };
 
   const handleDeleteComment = async (commentId: string) => {
@@ -80,6 +84,26 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
     }
     setDeletingCommentId(null);
   };
+
+  const handleDeletePost = async (postId: string) => {
+    setDeletingPostId(postId);
+    const token = user.getUser().token;
+    if (!token) {
+      console.error("Token not found");
+      return;
+    }
+
+    const { url, options } = POST_DELETE(postId, token);
+    const { response } = await request(url, options);
+    if (response && response.ok) {
+      onDeletePost(postId);
+      onClose();
+    } else {
+      console.error("Failed to delete comment");
+    }
+    setDeletingPostId(null);
+
+  }
 
   const handleStartEditingComment = (commentId: string, initialCommentText: string) => {
     setEditingCommentId(commentId);
@@ -189,12 +213,15 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
             <TouchableOpacity
               style={styles.postButton}
               onPress={handlePostComment}
-              disabled={postingLoading || postingComment} 
+              disabled={postingLoading || postingComment}
             >
               <Text style={styles.postButtonText}>
                 {postingComment ? 'Postando...' : 'Postar'}
               </Text>
             </TouchableOpacity>
+            {photo.usuario === currentUser && (
+              <FeedButtonDeletePost postId={photo._id} onDelete={handleDeletePost} deleting={deletingPostId === photo._id} />
+            )}
           </View>
         </View>
       </View>
@@ -274,7 +301,7 @@ const styles = StyleSheet.create({
   },
   postButton: {
     backgroundColor: '#ff1493',
-    borderRadius: 10,
+    borderRadius: 5,
     padding: 15,
     alignItems: 'center',
     marginTop: 10,
