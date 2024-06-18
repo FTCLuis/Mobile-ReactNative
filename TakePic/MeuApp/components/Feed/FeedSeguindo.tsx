@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, TouchableOpacity, Image } from 'react-native';
-import { GET_POST_USER, POST_DELETE } from '../../api/Api';
+import { GET_POST_USER } from '../../api/Api';
 import useFetch from '../../Hooks/useFetch';
 import FeedModal from './FeedModal';
 import { useUser } from '../../provider/userProvider';
@@ -13,10 +13,22 @@ const FeedSeguindo: React.FC = () => {
   const { request, loading, error } = useFetch();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
-  const [reloadData, setReloadData] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [posts, setPosts] = useState<any[]>([]);
   const [foto, setFoto] = useState<any[]>([]);
+
+  const handlePhotoClick = (photo: any) => {
+    setSelectedPhoto(photo);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setSelectedPhoto(null);
+    setModalVisible(false);
+  };
+
+  const headerData = {
+    textHeader: user?.usuario || '',
+    icon: 'person-circle-outline'
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,50 +50,6 @@ const FeedSeguindo: React.FC = () => {
   if (error) return <Error error={error} />;
   if (loading) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
 
-  const handlePhotoClick = (photo: any) => {
-    setSelectedPhoto(photo);
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setSelectedPhoto(null);
-    setModalVisible(false);
-  };
-
-  const onDeletePost = async (postId: string) => {
-    setIsDeleting(true);
-
-    const updatedPosts = posts.filter(post => post._id !== postId);
-    setPosts(updatedPosts);
-
-    try {
-      const token = user.token;
-      if (!token) {
-        console.error("Token not found");
-        return;
-      }
-
-      const { url, options } = POST_DELETE(postId, token);
-      const { response } = await request(url, options);
-      if (response && response.ok) {
-        setReloadData(true);
-      } else {
-        console.error("Failed to delete comment");
-      }
-    } catch (error) {
-      console.error("Failed to delete comment", error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const headerData = {
-    textHeader: user?.usuario || '',
-    icon: 'person-circle-outline'
-  };
-
-
-
   return (
     <ScrollView style={styles.container}>
       <Header data={headerData} />
@@ -101,7 +69,7 @@ const FeedSeguindo: React.FC = () => {
           </View>
         )}
       />
-      <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} onDeletePost={onDeletePost} />
+      <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} />
     </ScrollView>
   );
 };
