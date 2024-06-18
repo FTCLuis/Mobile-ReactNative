@@ -1,23 +1,42 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, Text, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { GET_POST_USER } from '../../api/Api';
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, TouchableOpacity, Image } from 'react-native';
+import { GET_POST_USER, POST_DELETE } from '../../api/Api';
 import useFetch from '../../Hooks/useFetch';
-import FeedPhotosItem from './FeedPhotosItem';
 import FeedModal from './FeedModal';
 import { useUser } from '../../provider/userProvider';
-import { userModel } from '../../models/userModel';
 import Header from '../Header/header';
 import HeaderFeeds from '../Header/headerFeeds';
-
+import Error from '../Helper/Error';
 
 const FeedSeguindo: React.FC = () => {
-  const user:userModel = useUser().getUser();
-  const { data, request, loading, error } = useFetch();
-  const token = window.localStorage.getItem('token');
+  const user = useUser().getUser();
+  const { request, loading, error } = useFetch();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
+  const [reloadData, setReloadData] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [posts, setPosts] = useState<any[]>([]);
   const [foto, setFoto] = useState<any[]>([]);
-  const [modalPhoto, setModalPhoto] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const requests = user?.seguindo.map(async (users) => {
+        const { url, options } = GET_POST_USER(users);
+        const { response, json } = await request(url, options);
+        return { response, json };
+      });
+
+      const responses = await Promise.all(requests);
+      const jsonData = responses.filter(({ response }) => response && response.ok).map(({ json }) => json);
+      const allPhotos = jsonData.flatMap(photoData => photoData.posts);
+      setFoto(allPhotos);
+    };
+
+    fetchData();
+  }, [user, request]);
+
+  if (error) return <Error error={error} />;
+  if (loading) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
 
   const handlePhotoClick = (photo: any) => {
     setSelectedPhoto(photo);
@@ -29,45 +48,61 @@ const FeedSeguindo: React.FC = () => {
     setModalVisible(false);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const requests = user?.seguindo.map((users) => {
-        const { url, options } = GET_POST_USER(users);
-        return request(url, options);
-      });
+  const onDeletePost = async (postId: string) => {
+    setIsDeleting(true);
 
-      const responses = await Promise.all(requests);
-      const jsonData = responses.filter((response: any) => response.ok).map((response) => response.json());
-      setFoto(jsonData);
-    };
+    const updatedPosts = posts.filter(post => post._id !== postId);
+    setPosts(updatedPosts);
 
-    fetchData();
-  }, [user, request]);
+    try {
+      const token = user.token;
+      if (!token) {
+        console.error("Token not found");
+        return;
+      }
+
+      const { url, options } = POST_DELETE(postId, token);
+      const { response } = await request(url, options);
+      if (response && response.ok) {
+        setReloadData(true);
+      } else {
+        console.error("Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Failed to delete post", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const headerData = {
+    textHeader: user?.usuario || '',
+    icon: 'person-circle-outline'
+  };
+
+
 
   return (
     <ScrollView style={styles.container}>
-        <Header />
-        <HeaderFeeds screen={'FeedSeguindoScreen'} />
-        <FlatList
-          data={data}
-          numColumns={2}
-          keyExtractor={(item, index) => index.toString()}
-          contentContainerStyle={styles.flatListContainer}
-          renderItem={({ item }) => (
-            <View style={styles.column}>
-              {item.posts.slice(0, 1).map((photo: any) => ( // Renderiza apenas a primeira foto de cada item
-                <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
-                  <View style={styles.imageContainer}>
-                    <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        />
-
-        <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} />
-      </ScrollView>
+      <Header data={headerData} />
+      <HeaderFeeds screen={'FeedSeguindoScreen'} />
+      <FlatList
+        data={foto}
+        numColumns={2}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={styles.flatListContainer}
+        renderItem={({ item }) => (
+          <View style={styles.column}>
+            <TouchableOpacity key={item._id} style={styles.photo} onPress={() => handlePhotoClick(item)}>
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: item.pathFotoPost }} style={styles.image} resizeMode="cover" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+      <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} onDeletePost={onDeletePost} />
+    </ScrollView>
   );
 };
 
@@ -80,52 +115,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  username: {
-    fontSize: 16,
-    marginRight: 10,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  tabButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  tabText: {
-    fontSize: 16,
-    color: '#888',
-  },
-  tabTextActive: {
-    fontSize: 16,
-    color: '#ff1493',
-  },
-  activeIndicator: {
-    marginTop: 5,
-    height: 2,
-    backgroundColor: '#ff1493',
-    borderRadius: 1,
   },
   flatListContainer: {
     paddingHorizontal: 10,
@@ -143,16 +132,15 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: 200, // Definir altura fixa ou aspectRatio
+    height: 200,
     backgroundColor: '#f0f0f0',
     borderRadius: 10,
     overflow: 'hidden',
-    aspectRatio: 1
   },
   image: {
     width: '100%',
     height: '100%',
-    aspectRatio: 1
+    aspectRatio: 1,
   },
 });
 

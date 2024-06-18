@@ -9,10 +9,15 @@ const footerData = {
   text2: "Cadastre-se"
 }
 
+const headerData = {
+    textHeader: "Login / Registrar-se",
+    icon: ''
+}
+
 const LoginPage = () => {
     return (
         <View style={{flex: 1}}>
-            <Header />
+            <Header data={headerData} />
             <View style={{ paddingHorizontal: 20, flex: 1, marginTop: 26}}>
                 <Text style={{ fontSize: 38, marginBottom: 5, marginTop: 10, fontWeight: "bold" }}>Login</Text>
                 <View style={{width: 100, backgroundColor: 'hotpink', height: 2, marginBottom: 20, marginLeft: 3 }} />

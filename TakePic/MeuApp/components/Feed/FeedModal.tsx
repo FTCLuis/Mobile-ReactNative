@@ -1,24 +1,148 @@
-import React from 'react';
-import { Modal, View, StyleSheet, Text, TouchableOpacity, Image, TextInput, Dimensions, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, View, StyleSheet, Text, TouchableOpacity, Image, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../../provider/userProvider';
 import FeedButtonEdit from './FeedButtonEdit';
 import FeedButtonDelete from './FeedButtonDelete';
+import FeedButtonDeletePost from './FeedButtonDeletePost';
+import { CREATE_COMMENT, DELETE_COMMENT, PHOTO_EDIT_COMMENT, POST_DELETE } from '../../api/Api';
+import useFetch from '../../Hooks/useFetch';
+import Error from '../Helper/Error';
 
 interface FeedModalProps {
   visible: boolean;
   photo: {
+    usuario: string;
     pathFotoPost: string;
     comentarios: { _id: string; comentarioTexto: string; usuario: string }[];
+    _id: string;
   } | null;
   onClose: () => void;
+  onDeletePost: (postId: string) => void;
 }
 
-const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
+const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose, onDeletePost }) => {
   if (!visible || !photo) return null;
 
   const user = useUser();
   const currentUser = user.getUser().usuario;
+  const { request, loading: postingLoading, error } = useFetch();
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editedCommentText, setEditedCommentText] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
+
+  const handlePostComment = async () => {
+    if (!commentText.trim()) return;
+
+    const token = user.getUser().token;
+    if (!token) {
+      console.error("Token not found");
+      return;
+    }
+
+    const { url, options } = CREATE_COMMENT(
+      {
+        usuario: currentUser,
+        comentarioTexto: commentText,
+      },
+      photo._id,
+      token,
+    );
+
+    setPostingComment(true);
+
+    const { response, json } = await request(url, options);
+    if (response && response.ok) {
+      setCommentText('');
+      // Atualizar a lista de comentários
+      photo.comentarios.push(json);
+    } else {
+      console.error("Failed to post comment");
+    }
+
+    setPostingComment(false);
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    setDeletingCommentId(commentId);
+    const token = user.getUser().token;
+    if (!token) {
+      console.error("Token not found");
+      return;
+    }
+
+    const { url, options } = DELETE_COMMENT(commentId, token);
+    const { response } = await request(url, options);
+    if (response && response.ok) {
+      const updatedComments = photo.comentarios.filter((comment) => comment._id !== commentId);
+      photo.comentarios = updatedComments;
+    } else {
+      console.error("Failed to delete comment");
+    }
+    setDeletingCommentId(null);
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    setDeletingPostId(postId);
+    const token = user.getUser().token;
+    if (!token) {
+      console.error("Token not found");
+      return;
+    }
+
+    const { url, options } = POST_DELETE(postId, token);
+    const { response } = await request(url, options);
+    if (response && response.ok) {
+      onDeletePost(postId);
+      onClose();
+    } else {
+      console.error("Failed to delete comment");
+    }
+    setDeletingPostId(null);
+
+  }
+
+  const handleStartEditingComment = (commentId: string, initialCommentText: string) => {
+    setEditingCommentId(commentId);
+    setEditedCommentText(initialCommentText);
+  };
+
+  const handleCancelEditingComment = () => {
+    setEditingCommentId(null);
+    setEditedCommentText('');
+  };
+
+  const handleSaveEditedComment = async (commentId: string) => {
+    const token = user.getUser().token;
+    if (!token) {
+      console.error("Token not found");
+      return;
+    }
+
+    const { url, options } = PHOTO_EDIT_COMMENT(
+      {
+        comentarioTexto: editedCommentText,
+      },
+      token,
+      commentId,
+      photo._id,
+    );
+
+    const { response } = await request(url, options);
+    if (response && response.ok) {
+      const updatedComments = photo.comentarios.map((comment) =>
+        comment._id === commentId ? { ...comment, comentarioTexto: editedCommentText } : comment
+      );
+      photo.comentarios = updatedComments;
+      setEditingCommentId(null);
+      setEditedCommentText('');
+    } else {
+      console.error("Failed to edit comment");
+    }
+  };
 
   return (
     <Modal
@@ -39,29 +163,65 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose }) => {
             {photo.comentarios.map((comentario) => (
               <View key={comentario._id} style={styles.comment}>
                 <View style={styles.commentTextContainer}>
-                  <Text style={styles.commentText}>
-                    <Text style={styles.commentUser}>{comentario.usuario}: </Text>
-                    {comentario.comentarioTexto}
-                  </Text>
-                  {comentario.usuario === currentUser && (
-                    <View style={styles.buttonContainer}>
-                      <FeedButtonEdit />
-                      <FeedButtonDelete />
+                  {editingCommentId === comentario._id ? (
+                    <View style={styles.editContainer}>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editedCommentText}
+                        onChangeText={setEditedCommentText}
+                      />
+                      <TouchableOpacity onPress={() => handleSaveEditedComment(comentario._id)}>
+                        <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={handleCancelEditingComment}>
+                        <Ionicons name="close" size={24} color="#F44336" />
+                      </TouchableOpacity>
                     </View>
+                  ) : (
+                    <>
+                      <Text style={styles.commentText}>
+                        <Text style={styles.commentUser}>{comentario.usuario}: </Text>
+                        {comentario.comentarioTexto}
+                      </Text>
+                      {comentario.usuario === currentUser && (
+                        <View style={styles.buttonContainer}>
+                          <FeedButtonEdit
+                            onPress={() => handleStartEditingComment(comentario._id, comentario.comentarioTexto)}
+                          />
+                          <FeedButtonDelete
+                            commentId={comentario._id}
+                            onDelete={handleDeleteComment}
+                            deleting={deletingCommentId === comentario._id}
+                          />
+                        </View>
+                      )}
+                    </>
                   )}
                 </View>
               </View>
             ))}
           </ScrollView>
+          {error && <Error error={error} />}
           <View style={styles.modalContent}>
             <TextInput
               placeholder="Digite seu comentário..."
               style={styles.commentInput}
               multiline
+              value={commentText}
+              onChangeText={setCommentText}
             />
-            <TouchableOpacity style={styles.postButton}>
-              <Text style={styles.postButtonText}>Postar</Text>
+            <TouchableOpacity
+              style={styles.postButton}
+              onPress={handlePostComment}
+              disabled={postingLoading || postingComment}
+            >
+              <Text style={styles.postButtonText}>
+                {postingComment ? 'Postando...' : 'Postar'}
+              </Text>
             </TouchableOpacity>
+            {photo.usuario === currentUser && (
+              <FeedButtonDeletePost postId={photo._id} onDelete={handleDeletePost} deleting={deletingPostId === photo._id} />
+            )}
           </View>
         </View>
       </View>
@@ -141,7 +301,7 @@ const styles = StyleSheet.create({
   },
   postButton: {
     backgroundColor: '#ff1493',
-    borderRadius: 10,
+    borderRadius: 5,
     padding: 15,
     alignItems: 'center',
     marginTop: 10,
@@ -156,6 +316,19 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
     zIndex: 1,
+  },
+  editContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 5,
+    marginRight: 10,
+    fontSize: 14,
   },
 });
 
