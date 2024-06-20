@@ -9,6 +9,8 @@ import FeedLikePost from './FeedLikePost';
 import { CREATE_COMMENT, DELETE_COMMENT, PHOTO_EDIT_COMMENT, POST_DELETE } from '../../api/Api';
 import useFetch from '../../Hooks/useFetch';
 import Error from '../Helper/Error';
+import { useNavigation } from '@react-navigation/native';
+import { userPost } from '../../models/userModel';
 
 interface FeedModalProps {
   visible: boolean;
@@ -36,6 +38,7 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose, onDelete
   const [commentText, setCommentText] = useState('');
   const [postingComment, setPostingComment] = useState(false); 
   const [likedUsers, setLikedUsers] = useState<string[]>(photo.curtidas || []);
+  const navigation = useNavigation();
 
   useEffect(() => {
     setLikedUsers(photo.curtidas || []);
@@ -155,9 +158,14 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose, onDelete
     setLikedUsers(newLikedUsers);
   };
 
+  const redirectTelaPerfil = (usuario : string) => {
+    onClose()
+    navigation.navigate('PerfilUsuarioScreen', {usuario}); //home
+  }
+
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
@@ -170,11 +178,19 @@ const FeedModal: React.FC<FeedModalProps> = ({ visible, photo, onClose, onDelete
           <View style={styles.modalImageContainer}>
             <Image source={{ uri: photo.pathFotoPost }} style={styles.modalImage} resizeMode="contain" />
           </View>
-          <FeedLikePost 
-            postId={photo._id}
-            likedUsers={likedUsers}
-            onLikeChange={handleLikeChange}
-          />
+
+          <View style={styles.userLike}>
+            <FeedLikePost 
+              postId={photo._id}
+              likedUsers={likedUsers}
+              onLikeChange={handleLikeChange}
+            />
+
+            <TouchableOpacity onPress={() => redirectTelaPerfil(photo.usuario)}>
+              <Text style={styles.userPhoto}>@{photo.usuario}</Text>
+            </TouchableOpacity>
+          </View>
+          
           <ScrollView style={styles.commentsContainer}>
             {photo.comentarios.map((comentario) => (
               <View key={comentario._id} style={styles.comment}>
@@ -276,6 +292,9 @@ const styles = StyleSheet.create({
     height: undefined,
     aspectRatio: 1,
   },
+  likeUser: {
+    flex: 1
+  },
   commentsContainer: {
     maxHeight: 200,
     marginBottom: 10,
@@ -346,6 +365,14 @@ const styles = StyleSheet.create({
     marginRight: 10,
     fontSize: 14,
   },
+  userLike: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  userPhoto: {
+    marginTop: 3
+  }
 });
 
 export default FeedModal;

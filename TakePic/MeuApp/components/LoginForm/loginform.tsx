@@ -11,28 +11,30 @@ const LoginForm = () => {
   const user = useUser(); 
   const navigation = useNavigation();
 
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalAlertVisible, setModalAlertVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
+  const [email, setEmail] = useState('benicioCanalha@gmail.com');
+  const [password, setPassword] = useState('123456');
+  
   const [loading, setLoading] = useState(false);
   const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
 
   useEffect(() => {
     if (user.isLogged) {
       navigation.navigate('MinhaContaScreen' as never); //home
+    } else {
+      login()
     }
   }, [user.isLogged, navigation]); 
   
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   
 
   const login = async () => {
     if ( !email || !password ) {
       setErrorMessage("Algum campo não foi informado!");
       setMessageType("error")
-      setModalVisible(true); 
+      setModalAlertVisible(true);
       return;
     }
 
@@ -42,7 +44,7 @@ const LoginForm = () => {
     if (!requestToken.status) {
       setErrorMessage(requestToken.error ? requestToken.error : 'Erro ao fazer login');
       setMessageType("error")
-      setModalVisible(true); 
+      setModalAlertVisible(true); 
       setLoading(false);
       return;
     }
@@ -51,7 +53,7 @@ const LoginForm = () => {
       setErrorMessage('Sem Dados!');
       setMessageType("error")
       setLoading(false);
-      setModalVisible(true); 
+      setModalAlertVisible(true); 
       return;
     }
 
@@ -60,7 +62,7 @@ const LoginForm = () => {
     if (!requestUser.status) {
       setErrorMessage(requestUser.error ? requestUser.error : 'Erro ao carregar Usuario');
       setMessageType("error")
-      setModalVisible(true); 
+      setModalAlertVisible(true); 
       setLoading(false);
       return;
     }
@@ -69,13 +71,13 @@ const LoginForm = () => {
       setErrorMessage('Sem Dados!');
       setMessageType("error")
       setLoading(false);
-      setModalVisible(true); 
+      setModalAlertVisible(true); 
       return;
     }
 
     setMessageType("success")
     setErrorMessage('Logado com sucesso!');
-    setModalVisible(true); 
+    setModalAlertVisible(true); 
     user.toggleLogged()
     requestUser.data.token = requestToken.data.access_token
     user.setUser(requestUser.data)
@@ -104,7 +106,7 @@ const LoginForm = () => {
           </View>
       </Modal>
 
-      <AlertModal visible={modalVisible} message={errorMessage} type={MessageType} onClose={() => setModalVisible(false)} />
+      <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
     </View>
   );
 };

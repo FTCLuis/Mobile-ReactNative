@@ -125,10 +125,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    height: 'auto'
   },
   flatListContainer: {
     paddingHorizontal: 10,
     paddingTop: 10,
+    height: 'auto'
   },
   column: {
     flex: 1,
