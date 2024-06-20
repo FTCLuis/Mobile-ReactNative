@@ -4,14 +4,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../provider/userProvider';
 import { userModel, userPost } from '../models/userModel';
 import Header from '../components/Header/header';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import CriarPostModal from '../components/criarPostModal/criarPostModal';
 import { Image } from 'react-native';
 import FeedModal from '../components/Feed/FeedModal';
-import { POST_DELETE, SEND_REQUEST } from '../api/Api';
+import { POST_DELETE, SEND_REQUEST, USER_GET_PHOTO } from '../api/Api';
 import AlertModal from '../components/alertModal/alertModal';
 
-const MinhaConta = () => {
+const PerfilUsuario = () => {
+    const route = useRoute();
+    const usuario = route.params;
+    // console.log(usuario)
+
     const userProvider: {
       isLogged: boolean;
       toggleLogged: () => void;
@@ -33,17 +37,28 @@ const MinhaConta = () => {
     const [reloadData, setReloadData] = useState(false); 
 
     const [fotos, setFotos] = useState([
-      { id: '1', uri: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/09/21/774433979-palmeiras-arena-gremio.jpg' },
-      { id: '2', uri: 'https://c4.wallpaperflare.com/wallpaper/685/872/5/soccer-sociedade-esportiva-palmeiras-logo-wallpaper-preview.jpg' },
-      { id: '3', uri: 'https://c4.wallpaperflare.com/wallpaper/246/350/412/palestra-italia-palmeiras-wallpaper-preview.jpg' },
-      { id: '4', uri: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/04/09/cymera_20230409_181121-skpkao3lfk9u.jpg' },
+    //   { id: '1', uri: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/09/21/774433979-palmeiras-arena-gremio.jpg' },
+    //   { id: '2', uri: 'https://c4.wallpaperflare.com/wallpaper/685/872/5/soccer-sociedade-esportiva-palmeiras-logo-wallpaper-preview.jpg' },
+    //   { id: '3', uri: 'https://c4.wallpaperflare.com/wallpaper/246/350/412/palestra-italia-palmeiras-wallpaper-preview.jpg' },
+    //   { id: '4', uri: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/04/09/cymera_20230409_181121-skpkao3lfk9u.jpg' },
     ]);
 
     useEffect(() => {
       const fetchImages = async () => {
         var count = 0;
         var posts: any = []
-        user.posts.forEach((post: userPost) => {
+
+        const postsUpdateOptions = USER_GET_PHOTO(usuario?.usuario, user.token);
+        const responsePosts = await SEND_REQUEST(postsUpdateOptions.url, postsUpdateOptions.options);
+        
+        if (!responsePosts.status) {
+            setErrorMessage("Erro ao obter os posts!");
+            setMessageType("error")
+            setModalAlertVisible(true);
+          return;
+        }
+
+        responsePosts.data.posts.forEach((post: userPost) => {
           count++;
           posts.push({
             id: count,
@@ -55,7 +70,7 @@ const MinhaConta = () => {
       };
   
       fetchImages();
-    }, [userProvider, reloadData, modalVisible]);
+    }, [ user] );
 
     const headerData = {
       textHeader: user.usuario,
@@ -135,16 +150,12 @@ const MinhaConta = () => {
       <View style={styles.content}>
 
         <View style={styles.textMC}>
-         <Text style={styles.sectionTitle}>Minha Conta</Text>
-         <View style={{ width: 178, backgroundColor: 'hotpink', height: 2}} />
+         <Text style={styles.sectionTitle}> {usuario?.usuario} </Text>
         </View>
 
         <View style={styles.buttons}>
-          <TouchableOpacity style={styles.button} onPress={() => setModalAddVisible(true)}>
-            <Ionicons name="add-outline" size={24} color="black" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={redirectLogin}>
-            <Ionicons name="log-out-outline" size={24} color="black" />
+          <TouchableOpacity>
+            <Text style={styles.buttonFollow}>Seguir</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -207,7 +218,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginLeft: 20,
     justifyContent: 'space-between',
-    marginTop: 20
+    marginTop: 20,
+    alignItems: 'center'
   },
   textMC: {
     justifyContent: 'center',
@@ -271,6 +283,14 @@ const styles = StyleSheet.create({
     height: '100%',
     aspectRatio: 1
   },
+  buttonFollow: {
+    backgroundColor: 'hotpink',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    color: 'white',
+    borderRadius: 5,
+    fontWeight: 'bold',
+  }
 });
 
-export default MinhaConta;
+export default PerfilUsuario;

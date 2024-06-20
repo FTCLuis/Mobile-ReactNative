@@ -1,8 +1,10 @@
 import React, {useState} from 'react';
-import { View, Text, TextInput, TouchableOpacity, } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, } from 'react-native';
 import styles from './style';
 import { SEND_REQUEST, USER_REGISTER } from '../../api/Api';
 import { useNavigation } from '@react-navigation/native';
+import AlertModal from '../alertModal/alertModal';
+import { Modal } from 'react-native';
 
 
 
@@ -11,13 +13,20 @@ const CadastrarForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigation = useNavigation();
+    const [modalAlertVisible, setModalAlertVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
+    const [loading, setLoading] = useState(false);
 
     const cadastrar = async() => {
         if (!usuario || !email || !password) {
-            console.log("Sem Dados");
-            // tratativa aqui
+            setErrorMessage("Sem Dados!");
+            setMessageType("error")
+            setModalAlertVisible(true);
             return;
         }
+
+        setLoading(true);
 
         let getUserRegister = USER_REGISTER ({
             usuario: usuario,
@@ -29,15 +38,18 @@ const CadastrarForm = () => {
 
         let requestRegister = await SEND_REQUEST(getUserRegister.url, getUserRegister.options);
         if (!requestRegister.status) {
-            console.log(requestRegister.error)
-            // colocar tratativa aqui
+            setErrorMessage("Erro na chamada da API: " + requestRegister.error);
+            setMessageType("error")
+            setModalAlertVisible(true);
+            setLoading(false);
             return;
         }
     
         if (!requestRegister.data) {
-            console.log("sem data")
-            console.log(requestRegister)
-            // tratativa aqui
+            setErrorMessage("Erro na chamada da API: " + JSON.stringify(requestRegister));
+            setMessageType("error")
+            setModalAlertVisible(true);
+            setLoading(false);
             return;
         }
         
@@ -50,7 +62,12 @@ const CadastrarForm = () => {
             requestRegister: requestRegister
         })
 
-        // //redireciona para a pagina de login
+        setErrorMessage("Usuário criado com sucesso!");
+        setMessageType("success")
+        setModalAlertVisible(true);
+        setLoading(false);
+
+        // redireciona para a pagina de login
         navigation.navigate('LoginScreen' as never); //home
         return;
     }
@@ -69,6 +86,18 @@ const CadastrarForm = () => {
             <TouchableOpacity onPress={cadastrar}>
                 <Text  style={styles.button}>Cadastrar</Text>
             </TouchableOpacity>
+
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={loading}
+            >
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                </View>
+            </Modal>
+
+            <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
         </View>
     );
 };

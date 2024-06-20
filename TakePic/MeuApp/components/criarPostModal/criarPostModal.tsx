@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { SEND_REQUEST, UPLOAD_PHOTO_POST } from '../../api/Api'; // Importe suas funções de requisição e configuração de URL
+import { PHOTO_POST, SEND_REQUEST, UPLOAD_PHOTO_POST, USER_GET_PHOTO } from '../../api/Api'; // Importe suas funções de requisição e configuração de URL
 import { useUser } from '../../provider/userProvider';
 import { userModel } from '../../models/userModel';
+import AlertModal from '../alertModal/alertModal';
 
 interface criarPostModalProps {
     data: {
@@ -15,12 +16,46 @@ interface criarPostModalProps {
 }
 
 const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
-    
-    const user: userModel | void = useUser().getUser(); 
+    const userProvider: {
+        isLogged: boolean;
+        toggleLogged: () => void;
+        setUser: (usrData: userModel) => void;
+        getUser: () => userModel;
+    } | void = useUser()
+
+    const user: userModel | void = userProvider.getUser(); 
     const navigation = useNavigation();
     const [description, setDescription] = useState('');
     const [imageUri, setImageUri] = useState<string | null>(null);
+    const [modalAlertVisible, setModalAlertVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
 
+    
+    useEffect(() => {
+        if (!userProvider || !user || !navigation) return;
+    
+        async function atualizaPosts() {
+          try {
+            // Aqui você pode atualizar os posts do usuário após postar a foto
+            const postsUpdateOptions = USER_GET_PHOTO(user.usuario, user.token);
+            const responsePosts = await SEND_REQUEST(postsUpdateOptions.url, postsUpdateOptions.options);
+            
+            if (!responsePosts.status) {
+              console.error('Erro ao obter posts:', responsePosts.error);
+              return;
+            }
+            
+            const updatedUser = { ...user, posts: responsePosts.data.posts };
+            userProvider.setUser(updatedUser);
+          } catch (error) {
+            console.error('Erro ao atualizar posts:', error);
+          }
+        }
+        
+        atualizaPosts();
+    }, [userProvider, user, navigation]);
+    
     const handleClose = () => {
         setImageUri(null);
         data.onClose();
@@ -29,30 +64,67 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
     const postarFoto = async () => {
         try {
             if (!imageUri) {
-                console.log('Nenhuma imagem selecionada');
+                setErrorMessage("Imagem não selecionada!");
+                setMessageType("error")
+                setModalAlertVisible(true);
                 return;
             }
-
+        
             const imageResponse = await fetch(imageUri);
-            const blob = await imageResponse.blob(); 
-    
+            const blob = await imageResponse.blob();
+        
             const formData = new FormData();
-            formData.append('photo', blob, 'photo.jpg'); 
-
+            formData.append('file', blob, 'photo.jpg');
             const { url, options } = UPLOAD_PHOTO_POST(formData, user.token);
+        
             const response = await SEND_REQUEST(url, options);
 
-            if (response.status) {
-                console.log('Foto postada com sucesso:', response.data);
-
-                // setImageUri(null);
-                // setDescription('');
-                // handleClose();
-            } else {
-                console.error('Erro ao postar a foto:', response.error);
+            if (!response.status) {
+                setErrorMessage("Erro ao postar a foto!");
+                setMessageType("error")
+                setModalAlertVisible(true);
+                return
             }
+
+            setErrorMessage("Foto postado com sucesso!");
+            setMessageType("success")
+            setModalAlertVisible(true);
+
+            const photoResponseOptions = PHOTO_POST({usuario: user.usuario, pathFotoPost: response.data.url, descricaoPost: description}, user.token, user._id)
+            const responsePhoto = await SEND_REQUEST(photoResponseOptions.url, photoResponseOptions.options);
+            
+            if (!responsePhoto.status) {
+                setErrorMessage("Erro ao postar a foto!");
+                setMessageType("error")
+                setModalAlertVisible(true);
+
+                return
+            }
+
+            setErrorMessage("Foto postado com sucesso!");
+            setMessageType("success")
+            setModalAlertVisible(true);
+         
+            const postsUpdateOptions = USER_GET_PHOTO(user.usuario, user.token);
+            const responsePosts = await SEND_REQUEST(postsUpdateOptions.url, postsUpdateOptions.options);
+            
+            if (!responsePosts.status) {
+                setErrorMessage("Erro ao obter os posts!");
+                setMessageType("error")
+                setModalAlertVisible(true);
+              return;
+            }
+            
+            const updatedUser = { ...user, posts: responsePosts.data.posts };
+            userProvider.setUser(updatedUser);
+
+            handleClose();
+          
+                
         } catch (error) {
-            console.error('Erro na requisição:', error);
+            setErrorMessage("Erro na requisição!");
+            setMessageType("error")
+            setModalAlertVisible(true);
         }
     };
 
@@ -73,7 +145,7 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
     
     return (
         <Modal
-            animationType="slide"
+            animationType="fade"
             transparent={true}
             visible={data.visible}
             onRequestClose={data.onClose} >
@@ -105,14 +177,12 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
                     {imageUri && <Text>Imagem selecionada</Text>}
 
                     <TouchableOpacity style={styles.button}
-                        onPress={() => {
-                            postarFoto();
-                            handleClose();
-                        }}>
+                        onPress={() => {postarFoto()}}>
                         <Text style={styles.buttonText}>Postar Foto</Text>
                     </TouchableOpacity>
                 </View>
             </View>
+            <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
         </Modal>
     );
 }

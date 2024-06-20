@@ -18,11 +18,8 @@ const AlertModal: React.FC<ModalProps> = ({ visible, message, type, onClose }) =
     if (visible) {
       timer = setTimeout(() => {
         onClose();
-      }, 2000);
+      }, 1700);
     }
-    return () => {
-      clearTimeout(timer);
-    };
   }, [visible, onClose]);
 
   return (
