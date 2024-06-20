@@ -1,6 +1,6 @@
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, Text, TouchableOpacity, Image, Dimensions, Animated } from 'react-native'; // Importe Animated
+import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, Text, TouchableOpacity, Image } from 'react-native';
 import useFetch from '../../Hooks/useFetch';
 import { GET_POSTS, POST_DELETE } from '../../api/Api';
 import Error from '../Helper/Error';
@@ -23,28 +23,29 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
-  const [reloadData, setReloadData] = useState(false); 
-  const [isDeleting, setIsDeleting] = useState(false); 
+  const [isDeleting, setIsDeleting] = useState(false);
   const user: userModel | void = useUser().getUser();
-
-  useEffect(() => {
-    fetchPhotos();
-  }, [request, reloadData]); 
 
   const fetchPhotos = async () => {
     const { url, options } = GET_POSTS();
     const { json } = await request(url, options);
     if (json) {
-      setPosts(json); 
+      setPosts(json);
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchPhotos();
+    }, [])
+  );
+
   const onDeletePost = async (postId: string) => {
-    setIsDeleting(true); 
+    setIsDeleting(true);
 
     const updatedPosts = posts.filter(post => post._id !== postId);
     setPosts(updatedPosts);
-    
+
     try {
       const token = user.token;
       if (!token) {
@@ -55,19 +56,15 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
       const { url, options } = POST_DELETE(postId, token);
       const { response } = await request(url, options);
       if (response && response.ok) {
-        setReloadData(true); 
+        fetchPhotos();
       } else {
-        console.error("Failed to delete comment");
+        console.error("Failed to delete post");
       }
     } catch (error) {
-      console.error("Failed to delete comment", error);
+      console.error("Failed to delete post", error);
     } finally {
-      setIsDeleting(false); 
+      setIsDeleting(false);
     }
-  };
-
-  const reloadDataHandler = () => {
-    setReloadData(true);
   };
 
   const handlePhotoClick = (photo: any) => {
@@ -83,10 +80,9 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
   const headerData = {
     textHeader: user.usuario,
     icon: 'person-circle-outline'
-  }
+  };
 
   if (error) return <Error error={error} />;
-  
   if (loading && !isDeleting) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
 
   return (
@@ -94,13 +90,13 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
       <Header data={headerData} />
       <HeaderFeeds screen={'FeedGeralScreen'} />
       <FlatList
-        data={data}
+        data={posts}
         numColumns={2}
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={styles.flatListContainer}
         renderItem={({ item }) => (
           <View style={styles.column}>
-            {item.posts.slice(0, 1).map((photo: any) => ( 
+            {item.posts.slice(0, 1).map((photo: any) => (
               <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
                 <View style={styles.imageContainer}>
                   <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
@@ -110,7 +106,6 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
           </View>
         )}
       />
-
       <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} onDeletePost={onDeletePost} />
     </ScrollView>
   );
@@ -142,16 +137,16 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: 200, // Definir altura fixa ou aspectRatio
+    height: 200,
     backgroundColor: '#f0f0f0',
     borderRadius: 10,
     overflow: 'hidden',
-    aspectRatio: 1
+    aspectRatio: 1,
   },
   image: {
     width: '100%',
     height: '100%',
-    aspectRatio: 1
+    aspectRatio: 1,
   },
 });
 
