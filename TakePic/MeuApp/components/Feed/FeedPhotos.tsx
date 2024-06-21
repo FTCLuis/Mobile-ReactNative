@@ -1,6 +1,6 @@
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, Text, TouchableOpacity, Image, Dimensions, Animated } from 'react-native'; // Importe Animated
+import { View, ActivityIndicator, StyleSheet, ScrollView, FlatList, Text, TouchableOpacity, Image } from 'react-native';
 import useFetch from '../../Hooks/useFetch';
 import { GET_POSTS, POST_DELETE } from '../../api/Api';
 import Error from '../Helper/Error';
@@ -23,28 +23,29 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
-  const [reloadData, setReloadData] = useState(false); 
-  const [isDeleting, setIsDeleting] = useState(false); 
+  const [isDeleting, setIsDeleting] = useState(false);
   const user: userModel | void = useUser().getUser();
-
-  useEffect(() => {
-    fetchPhotos();
-  }, [request, reloadData]); 
 
   const fetchPhotos = async () => {
     const { url, options } = GET_POSTS();
     const { json } = await request(url, options);
     if (json) {
-      setPosts(json); 
+      setPosts(json);
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchPhotos();
+    }, [])
+  );
+
   const onDeletePost = async (postId: string) => {
-    setIsDeleting(true); 
+    setIsDeleting(true);
 
     const updatedPosts = posts.filter(post => post._id !== postId);
     setPosts(updatedPosts);
-    
+
     try {
       const token = user.token;
       if (!token) {
@@ -55,19 +56,15 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
       const { url, options } = POST_DELETE(postId, token);
       const { response } = await request(url, options);
       if (response && response.ok) {
-        setReloadData(true); 
+        fetchPhotos();
       } else {
-        console.error("Failed to delete comment");
+        console.error("Failed to delete post");
       }
     } catch (error) {
-      console.error("Failed to delete comment", error);
+      console.error("Failed to delete post", error);
     } finally {
-      setIsDeleting(false); 
+      setIsDeleting(false);
     }
-  };
-
-  const reloadDataHandler = () => {
-    setReloadData(true);
   };
 
   const handlePhotoClick = (photo: any) => {
@@ -83,34 +80,45 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
   const headerData = {
     textHeader: user.usuario,
     icon: 'person-circle-outline'
-  }
+  };
 
   if (error) return <Error error={error} />;
-  
   if (loading && !isDeleting) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
+
+  // Criar uma matriz de todas as fotos de todos os usuários
+  let allPhotos: any[] = [];
+  posts.forEach(post => {
+    allPhotos = [...allPhotos, ...post.posts];
+  });
+
+  // Calcula quantas colunas (fotos por linha) queremos exibir
+  const columns = 2;
 
   return (
     <ScrollView style={styles.container}>
       <Header data={headerData} />
       <HeaderFeeds screen={'FeedGeralScreen'} />
-      <FlatList
-        data={data}
-        numColumns={2}
-        keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.flatListContainer}
-        renderItem={({ item }) => (
-          <View style={styles.column}>
-            {item.posts.slice(0, 1).map((photo: any) => ( 
-              <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
-                <View style={styles.imageContainer}>
-                  <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
-                </View>
-              </TouchableOpacity>
-            ))}
+      <View style={styles.flatListContainer}>
+        {Array.from({ length: Math.ceil(allPhotos.length / columns) }).map((_, rowIndex) => (
+          <View key={rowIndex} style={styles.row}>
+            {Array.from({ length: columns }).map((_, colIndex) => {
+              const photoIndex = rowIndex * columns + colIndex;
+              const photo = allPhotos[photoIndex];
+              if (photo) {
+                return (
+                  <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
+                    <View style={styles.imageContainer}>
+                      <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
+                    </View>
+                  </TouchableOpacity>
+                );
+              } else {
+                return <View key={photoIndex} style={styles.photo}></View>;
+              }
+            })}
           </View>
-        )}
-      />
-
+        ))}
+      </View>
       <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} onDeletePost={onDeletePost} />
     </ScrollView>
   );
@@ -125,35 +133,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    height: 'auto'
   },
   flatListContainer: {
     paddingHorizontal: 10,
     paddingTop: 10,
-    height: 'auto'
   },
-  column: {
-    flex: 1,
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 5,
+    marginBottom: 10,
   },
   photo: {
+    width: '48%', // Ajuste para duas colunas, com espaçamento
+    aspectRatio: 1,
     marginVertical: 5,
-    flex: 1,
-  },
-  imageContainer: {
-    width: '100%',
-    height: 200, // Definir altura fixa ou aspectRatio
     backgroundColor: '#f0f0f0',
     borderRadius: 10,
     overflow: 'hidden',
-    aspectRatio: 1
+  },
+  imageContainer: {
+    width: '100%',
+    height: '100%',
   },
   image: {
     width: '100%',
     height: '100%',
-    aspectRatio: 1
+    borderRadius: 10,
   },
 });
 

@@ -6,7 +6,6 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { PHOTO_POST, SEND_REQUEST, UPLOAD_PHOTO_POST, USER_GET_PHOTO } from '../../api/Api'; // Importe suas funções de requisição e configuração de URL
 import { useUser } from '../../provider/userProvider';
 import { userModel } from '../../models/userModel';
-import AlertModal from '../alertModal/alertModal';
 
 interface criarPostModalProps {
     data: {
@@ -182,7 +181,6 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
                     </TouchableOpacity>
                 </View>
             </View>
-            <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
         </Modal>
     );
 }

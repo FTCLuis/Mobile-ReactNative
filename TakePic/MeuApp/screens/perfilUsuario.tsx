@@ -9,7 +9,6 @@ import CriarPostModal from '../components/criarPostModal/criarPostModal';
 import { Image } from 'react-native';
 import FeedModal from '../components/Feed/FeedModal';
 import { POST_DELETE, SEND_REQUEST, USER_GET_PHOTO } from '../api/Api';
-import AlertModal from '../components/alertModal/alertModal';
 
 const PerfilUsuario = () => {
     const route = useRoute();
@@ -181,8 +180,6 @@ const PerfilUsuario = () => {
       </ScrollView>
 
       <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} onDeletePost={onDeletePost} />
-
-      <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
         
     </View>
   );

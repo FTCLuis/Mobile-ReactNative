@@ -7,7 +7,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderBottomWidth: 1,
-        borderColor: 'gray'
+        borderColor: 'gray',
+        marginTop: 35
     },
     logoText: {
         fontSize: 24,

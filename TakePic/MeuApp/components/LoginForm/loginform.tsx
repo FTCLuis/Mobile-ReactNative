@@ -4,7 +4,6 @@ import styles from './style';
 import { SEND_REQUEST, TOKEN_POST, USER_GET } from '../../api/Api';   
 import { useUser } from '../../provider/userProvider';
 import { useNavigation } from '@react-navigation/native';
-import AlertModal from '../alertModal/alertModal';
 
 
 const LoginForm = () => {
@@ -106,7 +105,6 @@ const LoginForm = () => {
           </View>
       </Modal>
 
-      <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
     </View>
   );
 };

@@ -3,7 +3,6 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, } from 'rea
 import styles from './style';
 import { SEND_REQUEST, USER_REGISTER } from '../../api/Api';
 import { useNavigation } from '@react-navigation/native';
-import AlertModal from '../alertModal/alertModal';
 import { Modal } from 'react-native';
 
 
@@ -97,7 +96,6 @@ const CadastrarForm = () => {
                 </View>
             </Modal>
 
-            <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
         </View>
     );
 };

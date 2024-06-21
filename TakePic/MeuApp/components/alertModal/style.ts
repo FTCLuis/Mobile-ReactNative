@@ -1,6 +1,14 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
-const getStyles = (type: 'success' | 'error' | 'warning') => {
+export interface Styles {
+  modalContainer: ViewStyle;
+  modalContent: ViewStyle;
+  modalText: TextStyle;
+  closeButton: ViewStyle;
+  closeButtonText: TextStyle;
+}
+
+const getStyles = (type: 'success' | 'error' | 'warning'): Styles => {
 
   let ModalbackgroundColor;
   switch (type) {
