@@ -4,8 +4,6 @@ import styles from './style';
 import { SEND_REQUEST, TOKEN_POST, USER_GET } from '../../api/Api';   
 import { useUser } from '../../provider/userProvider';
 import { useNavigation } from '@react-navigation/native';
-import AlertModal from '../alertModal/alertModal';
-
 
 const LoginForm = () => {
   const user = useUser(); 
@@ -103,8 +101,6 @@ const LoginForm = () => {
               <ActivityIndicator size="large" color="#FFFFFF" />
           </View>
       </Modal>
-
-      <AlertModal visible={modalVisible} message={errorMessage} type={MessageType} onClose={() => setModalVisible(false)} />
     </View>
   );
 };

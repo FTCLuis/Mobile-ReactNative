@@ -8,10 +8,7 @@ const Feed: React.FC = () => {
 
   return (
     <View style={styles.mainContainer}>
-      {modalPhoto && (
-        <FeedModal photo={modalPhoto} setModalPhoto={setModalPhoto} />
-      )}
-      <FeedPhotos setModalPhoto={setModalPhoto} modalPhoto={modalPhoto} />
+      <FeedPhotos/>
     </View>
   );
 };

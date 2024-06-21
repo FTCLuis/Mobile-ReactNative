@@ -35,7 +35,6 @@ const FeedSeguindo: React.FC = () => {
     fetchData();
   }, [user, request]);
 
-  if (error) return <Error error={error} />;
   if (loading) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
 
   const handlePhotoClick = (photo: any) => {
@@ -83,7 +82,7 @@ const FeedSeguindo: React.FC = () => {
 
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Header data={headerData} />
       <HeaderFeeds screen={'FeedSeguindoScreen'} />
       <FlatList
@@ -102,7 +101,7 @@ const FeedSeguindo: React.FC = () => {
         )}
       />
       <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} onDeletePost={onDeletePost} />
-    </ScrollView>
+    </View>
   );
 };
 

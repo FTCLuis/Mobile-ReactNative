@@ -10,15 +10,11 @@ import FeedModal from './FeedModal';
 import { userModel } from '../../models/userModel';
 import { useUser } from '../../provider/userProvider';
 
-interface FeedPhotosProps {
-  setModalPhoto: React.Dispatch<React.SetStateAction<any>>;
-}
-
 interface Photo {
   pathFotoPost: string;
 }
 
-const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
+const FeedPhotos: React.FC = () => {
   const { data, request, loading, error } = useFetch();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
@@ -85,27 +81,40 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
   if (error) return <Error error={error} />;
   if (loading && !isDeleting) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
 
+  // Criar uma matriz de todas as fotos de todos os usuários
+  let allPhotos: any[] = [];
+  posts.forEach(post => {
+    allPhotos = [...allPhotos, ...post.posts];
+  });
+
+  // Calcula quantas colunas (fotos por linha) queremos exibir
+  const columns = 2;
+
   return (
     <ScrollView style={styles.container}>
       <Header data={headerData} />
       <HeaderFeeds screen={'FeedGeralScreen'} />
-      <FlatList
-        data={posts}
-        numColumns={2}
-        keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.flatListContainer}
-        renderItem={({ item }) => (
-          <View style={styles.column}>
-            {item.posts.slice(0, 1).map((photo: any) => (
-              <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
-                <View style={styles.imageContainer}>
-                  <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
-                </View>
-              </TouchableOpacity>
-            ))}
+      <View style={styles.flatListContainer}>
+        {Array.from({ length: Math.ceil(allPhotos.length / columns) }).map((_, rowIndex) => (
+          <View key={rowIndex} style={styles.row}>
+            {Array.from({ length: columns }).map((_, colIndex) => {
+              const photoIndex = rowIndex * columns + colIndex;
+              const photo = allPhotos[photoIndex];
+              if (photo) {
+                return (
+                  <TouchableOpacity key={photo._id} style={styles.photo} onPress={() => handlePhotoClick(photo)}>
+                    <View style={styles.imageContainer}>
+                      <Image source={{ uri: photo.pathFotoPost }} style={styles.image} resizeMode="cover" />
+                    </View>
+                  </TouchableOpacity>
+                );
+              } else {
+                return <View key={photoIndex} style={styles.photo}></View>;
+              }
+            })}
           </View>
-        )}
-      />
+        ))}
+      </View>
       <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} onDeletePost={onDeletePost} />
     </ScrollView>
   );
@@ -125,28 +134,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingTop: 10,
   },
-  column: {
-    flex: 1,
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 5,
+    marginBottom: 10,
   },
   photo: {
+    width: '48%', // Ajuste para duas colunas, com espaçamento
+    aspectRatio: 1,
     marginVertical: 5,
-    flex: 1,
-  },
-  imageContainer: {
-    width: '100%',
-    height: 200,
     backgroundColor: '#f0f0f0',
     borderRadius: 10,
     overflow: 'hidden',
-    aspectRatio: 1,
+  },
+  imageContainer: {
+    width: '100%',
+    height: '100%',
   },
   image: {
     width: '100%',
     height: '100%',
-    aspectRatio: 1,
+    borderRadius: 10,
   },
 });
 
