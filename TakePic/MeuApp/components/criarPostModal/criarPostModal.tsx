@@ -141,15 +141,24 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
     };
 
     const openImagePicker = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            setImageUri(result.uri);
+        try {
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 1,
+            });
+    
+            if (!result.canceled) {
+                // Verifica se result.uri está definido
+                if (result.uri) {
+                    setImageUri(result.uri);
+                } else {
+                    console.error('A URI da imagem selecionada não está disponível.');
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao abrir a galeria de imagens:', error);
         }
     };
     
