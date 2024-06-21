@@ -21,9 +21,6 @@ const MinhaConta = () => {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [modalAddVisible, setModalAddVisible] = useState(false);
-    const [modalAlertVisible, setModalAlertVisible] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [MessageType, setMessageType] = useState<'success' | 'error' | 'warning'>('warning');
     const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
     const [reloadData, setReloadData] = useState(false); 
     const [fotos, setFotos] = useState([

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, TextInput, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { PHOTO_POST, SEND_REQUEST, UPLOAD_PHOTO_POST, USER_GET_PHOTO } from '../../api/Api'; // Importe suas funções de requisição e configuração de URL
 import { useUser } from '../../provider/userProvider';
 import { userModel } from '../../models/userModel';
+import { PermissionsAndroid } from 'react-native';
 
 interface criarPostModalProps {
     data: {
@@ -26,9 +28,6 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
     const navigation = useNavigation();
     const [description, setDescription] = useState('');
     const [imageUri, setImageUri] = useState<string | null>(null);
-    const [modalAlertVisible, setModalAlertVisible] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
 
     
     useEffect(() => {
@@ -63,9 +62,7 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
     const postarFoto = async () => {
         try {
             if (!imageUri) {
-                setErrorMessage("Imagem não selecionada!");
-                setMessageType("error")
-                setModalAlertVisible(true);
+                console.error("Imagem não selecionada!");
                 return;
             }
         
@@ -79,38 +76,27 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
             const response = await SEND_REQUEST(url, options);
 
             if (!response.status) {
-                setErrorMessage("Erro ao postar a foto!");
-                setMessageType("error")
-                setModalAlertVisible(true);
+                console.error("Erro ao postar a foto!");
                 return
             }
 
-            setErrorMessage("Foto postado com sucesso!");
-            setMessageType("success")
-            setModalAlertVisible(true);
+            console.log("Foto postado com sucesso!");
 
             const photoResponseOptions = PHOTO_POST({usuario: user.usuario, pathFotoPost: response.data.url, descricaoPost: description}, user.token, user._id)
             const responsePhoto = await SEND_REQUEST(photoResponseOptions.url, photoResponseOptions.options);
             
             if (!responsePhoto.status) {
-                setErrorMessage("Erro ao postar a foto!");
-                setMessageType("error")
-                setModalAlertVisible(true);
-
-                return
+                console.error("Erro ao postar a foto!");
+                return;
             }
 
-            setErrorMessage("Foto postado com sucesso!");
-            setMessageType("success")
-            setModalAlertVisible(true);
-         
+            console.log("Foto postado com sucesso!");
+
             const postsUpdateOptions = USER_GET_PHOTO(user.usuario, user.token);
             const responsePosts = await SEND_REQUEST(postsUpdateOptions.url, postsUpdateOptions.options);
             
             if (!responsePosts.status) {
-                setErrorMessage("Erro ao obter os posts!");
-                setMessageType("error")
-                setModalAlertVisible(true);
+                console.error("Erro ao obter os posts!");
               return;
             }
             
@@ -121,25 +107,50 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
           
                 
         } catch (error) {
-            setErrorMessage("Erro na requisição!");
-            setMessageType("error")
-            setModalAlertVisible(true);
+            console.error("Erro na requisição!");
         }
     };
 
-    const openImagePicker = () => {
-        launchImageLibrary({ mediaType: 'photo' }, (response) => {
-            if (response.didCancel) {
-            console.log('Usuário cancelou a seleção da imagem');
-            } else if (response.errorCode) {
-            console.log('Erro: ', response.errorMessage);
-            } else if (response.assets && response.assets.length > 0) {
-            const uri = response.assets[0].uri;
-                if (uri) {
-                    setImageUri(uri);
+    const requestStoragePermission = async () => {
+        if (Platform.OS === 'android') {
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                    {
+                        title: 'Permissão de Acesso ao Armazenamento',
+                        message: 'O aplicativo precisa de acesso ao armazenamento para selecionar fotos.',
+                        buttonNeutral: 'Pergunte-me depois',
+                        buttonNegative: 'Cancelar',
+                        buttonPositive: 'OK',
+                    },
+                );
+                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                    console.log('Você pode usar o armazenamento');
+                    openImagePicker(); // Chama o seletor de imagens após a permissão ser concedida
+                } else {
+                    console.log('Permissão de armazenamento negada');
+                    console.error('Permissão de armazenamento negada');
                 }
+            } catch (err) {
+                console.warn(err);
+                console.error('Erro ao solicitar permissão de armazenamento');
             }
+        } else {
+            openImagePicker();
+        }
+    };
+
+    const openImagePicker = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
         });
+
+        if (!result.canceled) {
+            setImageUri(result.uri);
+        }
     };
     
     return (
