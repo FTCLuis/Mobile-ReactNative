@@ -33,7 +33,7 @@ const FeedSeguindo: React.FC = () => {
     };
 
     fetchData();
-  }, [user, request]);
+  }, [request]);
 
   if (error) return <Error error={error} />;
   if (loading) return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
