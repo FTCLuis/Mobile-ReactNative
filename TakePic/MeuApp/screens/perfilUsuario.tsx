@@ -6,7 +6,7 @@ import Header from '../components/Header/header';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import CriarPostModal from '../components/criarPostModal/criarPostModal';
 import FeedModal from '../components/Feed/FeedModal';
-import { POST_DELETE, SEND_REQUEST, USER_GET_PHOTO, USER_GET_USUARIO } from '../api/Api';
+import { POST_DELETE, SEND_REQUEST, USER_GET_PHOTO, USER_GET_USUARIO, USER_FOLLOW } from '../api/Api';
 
 const PerfilUsuario = () => {
     const route = useRoute();
@@ -21,6 +21,7 @@ const PerfilUsuario = () => {
     const [modalAlertVisible, setModalAlertVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [MessageType, setMessageType] = useState<'success' | 'error' | 'warning'>('warning');
+    const [isFollower, setIsFollowing] = useState(false)
 
     const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
     const [reloadData, setReloadData] = useState(false); 
@@ -68,7 +69,16 @@ const PerfilUsuario = () => {
         };
 
         fetchImages();
-    }, [user, usuario, reloadData]);
+    }, [reloadData]); // Dependência adicionada aqui
+
+    const checkIfFollowing = () => {
+        const seguidores = user?.seguindo || [];
+        setIsFollowing(seguidores.includes(usuario?.usuario));
+    };
+
+    useEffect(() => {
+        checkIfFollowing();
+    }, [usuario, user]);
 
     const headerData = {
         textHeader: user?.usuario,
@@ -131,13 +141,27 @@ const PerfilUsuario = () => {
             setErrorMessage("Post deletado com sucesso!");
             setMessageType("success");
             setModalAlertVisible(true);
-            setReloadData(true); 
+            setReloadData(prev => !prev); 
 
         } catch (error) {
             setErrorMessage("Falha ao deletar comentário - 2!");
             setMessageType("error");
             setModalAlertVisible(true);
         } 
+    };
+
+    const seguirUsuario = async () => {
+        try {
+            let dadosRequest = await USER_FOLLOW(user?.usuario, usuario?.usuario, user?.token);
+            await SEND_REQUEST(dadosRequest.url, dadosRequest.options);
+            setIsFollowing(true); // Marcamos como seguindo após ação bem-sucedida
+            setReloadData(prev => !prev); // Atualiza os dados
+        } catch (error) {
+            console.error('Erro ao seguir usuário:', error);
+            setErrorMessage("Erro ao seguir usuário!");
+            setMessageType("error");
+            setModalAlertVisible(true);
+        }
     };
 
     return (
@@ -150,8 +174,10 @@ const PerfilUsuario = () => {
                 </View>
 
                 <View style={styles.buttons}>
-                    <TouchableOpacity>
-                        <Text style={styles.buttonFollow}>Seguir</Text>
+                    <TouchableOpacity onPress={seguirUsuario}>
+                        <Text style={styles.buttonFollow}>
+                            {isFollower ? "Seguindo" : "Seguir"}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -185,122 +211,121 @@ const PerfilUsuario = () => {
             <FeedModal visible={modalVisible} photo={selectedPhoto} onClose={closeModal} onDeletePost={onDeletePost} />
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-      flex: 1,
-      backgroundColor: 'white',
-  },
-  header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: '#e3e3e3',
-  },
-  title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-  },
-  userInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-  },
-  userName: {
-      marginRight: 8,
-      fontSize: 16,
-  },
-  content: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginLeft: 20,
-      justifyContent: 'space-between',
-      marginTop: 20,
-      alignItems: 'center'
-  },
-  textMC: {
-      justifyContent: 'center',
-      alignContent: 'center'
-  },
-  sectionTitle: {
-      fontSize: 30,
-      fontWeight: 'bold',
-  },
-  buttons: {
-      flexDirection: 'row',
-      marginRight: 15
-  },
-  button: {
-      margin: 8,
-      padding: 11,
-      backgroundColor: 'lightgray',
-      borderRadius: 8,
-      elevation: 2,
-  },
-  flatListContainer: {
-      margin: 15
-  },
-  itemContainer: {
-      flex: 1,
-      margin: 5,
-      borderRadius: 5,
-      overflow: 'hidden',
-  },
-  itemImage: {
-      width: '100%',
-      aspectRatio: 1, // Aspect ratio 1:1 para manter a proporção da imagem
-  },
-  loader: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-  },
-  column: {
-      flex: 1,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingHorizontal: 5,
-  },
-  photo: {
-      marginVertical: 5,
-      flex: 1,
-  },
-  imageContainer: {
-      width: '100%',
-      height: 200, // Definir altura fixa ou aspectRatio
-      backgroundColor: '#f0f0f0',
-      borderRadius: 10,
-      overflow: 'hidden',
-      aspectRatio: 1
-  },
-  image: {
-      width: '100%',
-      height: '100%',
-      aspectRatio: 1
-  },
-  buttonFollow: {
-      backgroundColor: 'hotpink',
-      paddingHorizontal: 15,
-      paddingVertical: 8,
-      color: 'white',
-      borderRadius: 5,
-      fontWeight: 'bold',
-  },
-  statsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      paddingVertical: 20,
-      backgroundColor: '#f5f5f5', // Cinza clarinho
-      marginTop: 15,
-      alignItems: "center"
-  },
-  statText: {
-      fontSize: 16,
-      fontWeight: 'bold',
-  },
+    container: {
+        flex: 1,
+        backgroundColor: 'white',
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e3e3e3',
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    userInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    userName: {
+        marginRight: 8,
+        fontSize: 16,
+    },
+    content: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginLeft: 20,
+        justifyContent: 'space-between',
+        marginTop: 20,
+        alignItems: 'center'
+    },
+    textMC: {
+        justifyContent: 'center',
+        alignContent: 'center'
+    },
+    sectionTitle: {
+        fontSize: 30,
+        fontWeight: 'bold',
+    },
+    buttons: {
+        flexDirection: 'row',
+        marginRight: 15
+    },
+    button: {
+        margin: 8,
+        padding: 11,
+        backgroundColor: 'lightgray',
+        borderRadius: 8,
+        elevation: 2,
+    },
+    flatListContainer: {
+        margin: 15
+    },
+    itemContainer: {
+        flex: 1,
+        margin: 5,
+        borderRadius: 5,
+        overflow: 'hidden',
+    },
+    itemImage: {
+        width: '100%',
+        aspectRatio: 1, // Aspect ratio 1:1 para manter a proporção da imagem
+    },
+    loader: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    column: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 5,
+    },
+    photo: {
+        marginVertical: 5,
+        flex: 1,
+    },
+    imageContainer: {
+        width: '100%',
+        height: 200, // Definir altura fixa ou aspectRatio
+        backgroundColor: '#f0f0f0',
+        borderRadius: 10,
+        overflow: 'hidden',
+        aspectRatio: 1
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+        aspectRatio: 1
+    },
+    buttonFollow: {
+        backgroundColor: 'hotpink',
+        paddingHorizontal: 15,
+        paddingVertical: 8,
+        color: 'white',
+        borderRadius: 5,
+        fontWeight: 'bold',
+    },
+    statsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 20,
+        backgroundColor: '#f5f5f5', // Cinza clarinho
+        marginTop: 15,
+        alignItems: "center"
+    },
+    statText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
 });
-
 
 export default PerfilUsuario;
