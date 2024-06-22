@@ -4,6 +4,7 @@ import styles from './style';
 import { SEND_REQUEST, TOKEN_POST, USER_GET } from '../../api/Api';   
 import { useUser } from '../../provider/userProvider';
 import { useNavigation } from '@react-navigation/native';
+import AlertModal from '../alertModal/alertModal';
 
 
 const LoginForm = () => {
@@ -12,8 +13,8 @@ const LoginForm = () => {
 
   const [modalAlertVisible, setModalAlertVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [email, setEmail] = useState('benicioCanalha@gmail.com');
-  const [password, setPassword] = useState('123456');
+  const [email, setEmail] = useState('guilherme.saar@gmail.com');
+  const [password, setPassword] = useState('G123');
   
   const [loading, setLoading] = useState(false);
   const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
@@ -22,7 +23,7 @@ const LoginForm = () => {
     if (user.isLogged) {
       navigation.navigate('MinhaContaScreen' as never); //home
     } else {
-      login()
+      // login()
     }
   }, [user.isLogged, navigation]); 
   
@@ -105,6 +106,8 @@ const LoginForm = () => {
           </View>
       </Modal>
 
+          
+        <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
     </View>
   );
 };

@@ -1,16 +1,3 @@
-export interface userModel {
-    _id: string,
-    email: string,
-    usuario: string,
-    dataNasc: Date,
-    senha: string,
-    seguidores: [],
-    seguindo: [],
-    criadoEm: Date,
-    posts: [],
-    __v: string,
-    token: string,
-}
 
 export interface userPost {
     atualizadoEm : Date,
@@ -22,4 +9,18 @@ export interface userPost {
     tags: []
     usuario: string
     _id: string
+}
+
+export interface userModel {
+    _id: string,
+    email: string,
+    usuario: string,
+    dataNasc: Date,
+    senha: string,
+    seguidores: [],
+    seguindo: [],
+    criadoEm: Date,
+    posts: userPost[],
+    __v: string,
+    token: string,
 }

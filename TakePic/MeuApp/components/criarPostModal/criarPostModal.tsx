@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, TextInput, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { launchImageLibrary } from 'react-native-image-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { PHOTO_POST, SEND_REQUEST, UPLOAD_PHOTO_POST, USER_GET_PHOTO } from '../../api/Api'; // Importe suas funções de requisição e configuração de URL
 import { useUser } from '../../provider/userProvider';
 import { userModel } from '../../models/userModel';
-import { PermissionsAndroid } from 'react-native';
 
 interface criarPostModalProps {
     data: {
@@ -30,18 +28,29 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
     const [imageUri, setImageUri] = useState<string | null>(null);
 
     
+    const handleClose = () => {
+        setImageUri(null);
+        data.onClose();
+    }
+
     useEffect(() => {
         if (!userProvider || !user || !navigation) return;
     
         async function atualizaPosts() {
+            
           try {
             // Aqui você pode atualizar os posts do usuário após postar a foto
             const postsUpdateOptions = USER_GET_PHOTO(user.usuario, user.token);
             const responsePosts = await SEND_REQUEST(postsUpdateOptions.url, postsUpdateOptions.options);
             
+            console.log(3)
             if (!responsePosts.status) {
-              console.error('Erro ao obter posts:', responsePosts.error);
-              return;
+                if (!responsePosts || responsePosts.error === 'Este usuário não possui posts.') {
+                    return;
+                }
+                
+                console.error('Erro ao obter posts:', responsePosts.error);
+                return;
             }
             
             const updatedUser = { ...user, posts: responsePosts.data.posts };
@@ -52,12 +61,8 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
         }
         
         atualizaPosts();
-    }, [userProvider, user, navigation]);
+    }, [user.posts]);
     
-    const handleClose = () => {
-        setImageUri(null);
-        data.onClose();
-    }
 
     const postarFoto = async () => {
         try {
@@ -66,11 +71,18 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
                 return;
             }
         
-            const imageResponse = await fetch(imageUri);
-            const blob = await imageResponse.blob();
-        
+          
             const formData = new FormData();
-            formData.append('file', blob, 'photo.jpg');
+            if (Platform.OS === 'android') { 
+
+            }
+            else {
+                const imageResponse = await fetch(imageUri);
+                const blob = await imageResponse.blob();
+                formData.append('file', blob, 'photo.jpg');
+            }
+
+        
             const { url, options } = UPLOAD_PHOTO_POST(formData, user.token);
         
             const response = await SEND_REQUEST(url, options);
@@ -80,7 +92,7 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
                 return
             }
 
-            console.log("Foto postado com sucesso!");
+            console.log("Foto Uplodeada com sucesso!");
 
             const photoResponseOptions = PHOTO_POST({usuario: user.usuario, pathFotoPost: response.data.url, descricaoPost: description}, user.token, user._id)
             const responsePhoto = await SEND_REQUEST(photoResponseOptions.url, photoResponseOptions.options);
@@ -111,48 +123,24 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
         }
     };
 
-    const requestStoragePermission = async () => {
-        if (Platform.OS === 'android') {
-            try {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                    {
-                        title: 'Permissão de Acesso ao Armazenamento',
-                        message: 'O aplicativo precisa de acesso ao armazenamento para selecionar fotos.',
-                        buttonNeutral: 'Pergunte-me depois',
-                        buttonNegative: 'Cancelar',
-                        buttonPositive: 'OK',
-                    },
-                );
-                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                    console.log('Você pode usar o armazenamento');
-                    openImagePicker(); // Chama o seletor de imagens após a permissão ser concedida
-                } else {
-                    console.log('Permissão de armazenamento negada');
-                    console.error('Permissão de armazenamento negada');
-                }
-            } catch (err) {
-                console.warn(err);
-                console.error('Erro ao solicitar permissão de armazenamento');
-            }
-        } else {
-            openImagePicker();
-        }
-    };
-
     const openImagePicker = async () => {
         try {
+            const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                console.log('permission denied!')
+            }
+
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
-                aspect: [4, 3],
+                base64: false,
+                aspect: [4, 4],
                 quality: 1,
             });
     
             if (!result.canceled) {
-                // Verifica se result.uri está definido
-                if (result.uri) {
-                    setImageUri(result.uri);
+                if (result.assets[0].uri) {
+                    setImageUri(result.assets[0].uri);
                 } else {
                     console.error('A URI da imagem selecionada não está disponível.');
                 }

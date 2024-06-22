@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-const URL = 'https://api-site-imagens.onrender.com/';
+const URL = 'https://apisiteimagens.onrender.com/';
 const StatusOk = [200, 201, 202]
 
 

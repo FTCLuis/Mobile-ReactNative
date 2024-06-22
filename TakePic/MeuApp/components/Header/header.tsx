@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 interface HeaderProps {
   data: {
     textHeader: string;
-    icon?: any;
+    icon?: string;
   }
 }
 
@@ -23,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({data}) => {
       <View>
         <TouchableOpacity style={styles.userInfo} onPress={() => {{data.icon && navigation.navigate('MinhaContaScreen' as never)}}}>
           <Text style={styles.loginText}>{data.textHeader}</Text>
-          {data.icon && <Ionicons name={data.icon} size={24} color="black" style={styles.icon} />}
+          <Text>{data.icon && <Ionicons name={data.icon} size={24} color="black" style={styles.icon} />}</Text>
         </TouchableOpacity>
       </View>
 

@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import CriarPostModal from '../components/criarPostModal/criarPostModal';
 import FeedModal from '../components/Feed/FeedModal';
 import { POST_DELETE, SEND_REQUEST } from '../api/Api';
+import AlertModal from '../components/alertModal/alertModal';
 
 const MinhaConta = () => {
     const userProvider = useUser();
@@ -22,30 +23,17 @@ const MinhaConta = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [modalAddVisible, setModalAddVisible] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
-    const [reloadData, setReloadData] = useState(false); 
     const [fotos, setFotos] = useState([
-        // { id: '1', uri: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/09/21/774433979-palmeiras-arena-gremio.jpg' },
+        // { id: '1', uri: '' },
         // { id: '2', uri: 'https://c4.wallpaperflare.com/wallpaper/685/872/5/soccer-sociedade-esportiva-palmeiras-logo-wallpaper-preview.jpg' },
         // { id: '3', uri: 'https://c4.wallpaperflare.com/wallpaper/246/350/412/palestra-italia-palmeiras-wallpaper-preview.jpg' },
         // { id: '4', uri: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/04/09/cymera_20230409_181121-skpkao3lfk9u.jpg' },
     ]);
 
-    useEffect(() => {
-        const fetchImages = async () => {
-            var count = 0;
-            var posts: any = [];
-            user.posts.forEach((post: userPost) => {
-                count++;
-                posts.push({
-                    id: count,
-                    uri: post?.pathFotoPost,
-                    post: post
-                });
-            });
-            setFotos(posts);
-        };
-        fetchImages();
-    }, [userProvider, reloadData, modalVisible]);
+    const [modalAlertVisible, setModalAlertVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
+    const [loading, setLoading] = useState(false);
 
     const headerData = {
         textHeader: user.usuario,
@@ -53,7 +41,6 @@ const MinhaConta = () => {
     };
 
     const fecharModal = () => {
-        setReloadData(true);
         setModalAddVisible(false);
     };
 
@@ -97,24 +84,41 @@ const MinhaConta = () => {
                 return;
             }
 
-            const updatedPosts = Object.entries(user.posts).filter(post => post[1]._id !== postId);
-            let remakePosts = [];
-            updatedPosts.map(item => {
-                remakePosts.push(item[1]);
-            });
-            const updatedUser = { ...user, posts: remakePosts };
-            userProvider.setUser(updatedUser);
             setErrorMessage("Post deletado com sucesso!");
             setMessageType("success");
             setModalAlertVisible(true);
-            setReloadData(true); 
-
+           
         } catch (error) {
+            console.log(error)
             setErrorMessage("Falha ao deletar comentário - 2!");
             setMessageType("error");
             setModalAlertVisible(true);
         } 
     };
+
+    useEffect(() => {
+        console.log(1)
+        const fetchImages = async () => {
+            var count = 0;
+            var posts: any = [];
+            
+            if (!user.posts) {
+                setFotos(posts);
+                return;
+            }
+
+            user.posts.forEach((post: userPost) => {
+                count++;
+                posts.push({
+                    id: count,
+                    uri: post?.pathFotoPost,
+                    post: post
+                });
+            });
+            setFotos(posts);
+        };
+        fetchImages();
+    }, [user.posts]);
 
     return (
         <View style={styles.container}>
@@ -157,6 +161,16 @@ const MinhaConta = () => {
 					)}
 				/>
 			</View>
+
+          
+                <AlertModal
+                    visible={modalAlertVisible}
+                    message={errorMessage}
+                    type={MessageType}
+                    onClose={() => setModalAlertVisible(false)}
+                />
+       
+
         </View>
     );
 };
