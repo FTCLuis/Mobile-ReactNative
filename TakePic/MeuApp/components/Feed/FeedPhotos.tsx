@@ -98,6 +98,7 @@ const FeedPhotos: React.FC<FeedPhotosProps> = ({ setModalPhoto }) => {
     <ScrollView style={styles.container}>
       <Header data={headerData} />
       <HeaderFeeds screen={'FeedGeralScreen'} />
+
       <View style={styles.flatListContainer}>
         {Array.from({ length: Math.ceil(allPhotos.length / columns) }).map((_, rowIndex) => (
           <View key={rowIndex} style={styles.row}>
@@ -154,11 +155,16 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     height: '100%',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    overflow: 'hidden',
+    aspectRatio: 1,
+
   },
   image: {
     width: '100%',
     height: '100%',
-    borderRadius: 10,
+    aspectRatio: 1,
   },
 });
 
