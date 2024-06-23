@@ -20,6 +20,7 @@ const FeedSeguindo: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log(user?.seguindo)
       const requests = user?.seguindo.map(async (users) => {
         const { url, options } = GET_POST_USER(users);
         const { response, json } = await request(url, options);

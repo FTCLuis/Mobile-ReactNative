@@ -24,7 +24,7 @@ const MinhaConta = () => {
     const [modalAddVisible, setModalAddVisible] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
     const [fotos, setFotos] = useState([
-        // { id: '1', uri: '' },
+        { id: '1', uri: '' },
         // { id: '2', uri: 'https://c4.wallpaperflare.com/wallpaper/685/872/5/soccer-sociedade-esportiva-palmeiras-logo-wallpaper-preview.jpg' },
         // { id: '3', uri: 'https://c4.wallpaperflare.com/wallpaper/246/350/412/palestra-italia-palmeiras-wallpaper-preview.jpg' },
         // { id: '4', uri: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/04/09/cymera_20230409_181121-skpkao3lfk9u.jpg' },
@@ -97,7 +97,6 @@ const MinhaConta = () => {
     };
 
     useEffect(() => {
-        console.log(1)
         const fetchImages = async () => {
             var count = 0;
             var posts: any = [];

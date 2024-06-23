@@ -73,12 +73,13 @@ const PerfilUsuario = () => {
 
     const checkIfFollowing = () => {
         const seguidores = user?.seguindo || [];
+        console.log(seguidores)
         setIsFollowing(seguidores.includes(usuario?.usuario));
     };
 
     useEffect(() => {
         checkIfFollowing();
-    }, [usuario, user]);
+    }, []);
 
     const headerData = {
         textHeader: user?.usuario,
@@ -95,10 +96,6 @@ const PerfilUsuario = () => {
         onClose: fecharModal
     };
 
-    const redirectLogin = () => {
-        toggleLogged();
-        navigation.navigate('LoginScreen' as never);
-    };
 
     const handlePhotoClick = (photo: any) => {
         setSelectedPhoto(photo.post);
@@ -154,7 +151,21 @@ const PerfilUsuario = () => {
         try {
             let dadosRequest = await USER_FOLLOW(user?.usuario, usuario?.usuario, user?.token);
             await SEND_REQUEST(dadosRequest.url, dadosRequest.options);
-            setIsFollowing(true); // Marcamos como seguindo após ação bem-sucedida
+            let seguindo: [] = user?.seguindo // .push(usuario?.usuario)
+            if (!isFollower) {
+                seguindo.push(usuario?.usuario)
+            } else {
+                const updatedPosts = seguindo.filter(seguindo => seguindo !== usuario?.usuario);
+                seguindo = []
+                updatedPosts.map(item => {
+                    seguindo.push(item[1]);
+                });
+            }
+
+            const updatedUser = { ...user, seguindo: seguindo };
+            userProvider?.setUser(updatedUser);
+            
+            setIsFollowing(!isFollower); // Marcamos como seguindo após ação bem-sucedida
             setReloadData(prev => !prev); // Atualiza os dados
         } catch (error) {
             console.error('Erro ao seguir usuário:', error);

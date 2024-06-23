@@ -23,7 +23,7 @@ const AlertModal: React.FC<ModalProps> = ({ visible, message, type, onClose }) =
       }, 1700);
     }
 
-    return () => clearTimeout(timer);
+    // return () => clearTimeout(timer);
   }, [visible, onClose]);
 
   // Definindo modalStyle como ViewStyle

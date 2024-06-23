@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, TextInput, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { PHOTO_POST, SEND_REQUEST, UPLOAD_PHOTO_POST, USER_GET_PHOTO } from '../../api/Api'; // Importe suas funções de requisição e configuração de URL
 import { useUser } from '../../provider/userProvider';
 import { userModel } from '../../models/userModel';
+import AlertModal from '../alertModal/alertModal';
 
 interface criarPostModalProps {
     data: {
@@ -22,10 +23,16 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
         getUser: () => userModel;
     } | void = useUser()
 
-    const user: userModel | void = userProvider.getUser(); 
+    const user: userModel = userProvider.getUser(); 
     const navigation = useNavigation();
     const [description, setDescription] = useState('');
     const [imageUri, setImageUri] = useState<string | null>(null);
+
+    
+    const [loading, setLoading] = useState(false);
+    const [modalAlertVisible, setModalAlertVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
 
     
     const handleClose = () => {
@@ -43,18 +50,23 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
             const postsUpdateOptions = USER_GET_PHOTO(user.usuario, user.token);
             const responsePosts = await SEND_REQUEST(postsUpdateOptions.url, postsUpdateOptions.options);
             
-            console.log(3)
+            // console.log(3)
             if (!responsePosts.status) {
-                if (!responsePosts || responsePosts.error === 'Este usuário não possui posts.') {
+                if (!responsePosts || responsePosts.error === 'Este usuário não obter posts.') {
                     return;
                 }
                 
+                setErrorMessage(responsePosts.error ? responsePosts.error : 'Erro ao fazer login');
+                setMessageType("error")
+                setModalAlertVisible(true); 
+                setLoading(false);
+
                 console.error('Erro ao obter posts:', responsePosts.error);
                 return;
             }
             
             const updatedUser = { ...user, posts: responsePosts.data.posts };
-            userProvider.setUser(updatedUser);
+            userProvider?.setUser(updatedUser);
           } catch (error) {
             console.error('Erro ao atualizar posts:', error);
           }
@@ -65,9 +77,15 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
     
 
     const postarFoto = async () => {
+        setLoading(true);
         try {
             if (!imageUri) {
                 console.error("Imagem não selecionada!");
+                  
+                setErrorMessage('Imagem não selecionada');
+                setMessageType("error")
+                setModalAlertVisible(true); 
+                setLoading(false);
                 return;
             }
         
@@ -89,6 +107,10 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
 
             if (!response.status) {
                 console.error("Erro ao postar a foto!");
+                setErrorMessage(response.error ? response.error : 'Erro ao postar a foto');
+                setMessageType("error")
+                setModalAlertVisible(true); 
+                setLoading(false);
                 return
             }
 
@@ -98,6 +120,10 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
             const responsePhoto = await SEND_REQUEST(photoResponseOptions.url, photoResponseOptions.options);
             
             if (!responsePhoto.status) {
+                setErrorMessage(responsePhoto.error ? responsePhoto.error : 'Erro ao postar a foto');
+                setMessageType("error")
+                setModalAlertVisible(true); 
+                setLoading(false);
                 console.error("Erro ao postar a foto!");
                 return;
             }
@@ -109,11 +135,20 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
             
             if (!responsePosts.status) {
                 console.error("Erro ao obter os posts!");
-              return;
+                setErrorMessage(responsePosts.error ? responsePosts.error : 'Erro ao obter os posts');
+                setMessageType("error")
+                setModalAlertVisible(true); 
+                setLoading(false);
+                return;
             }
             
             const updatedUser = { ...user, posts: responsePosts.data.posts };
             userProvider.setUser(updatedUser);
+
+            setErrorMessage('Post Criado com sucesso!');
+            setMessageType("success")
+            setModalAlertVisible(true); 
+            setLoading(false);
 
             handleClose();
           
@@ -188,6 +223,20 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
                         <Text style={styles.buttonText}>Postar Foto</Text>
                     </TouchableOpacity>
                 </View>
+
+                <Modal
+                    animationType="fade"
+                    transparent={true}
+                    visible={loading}
+                >
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                        <ActivityIndicator size="large" color="#FFFFFF" />
+                    </View>
+                </Modal>
+
+                    
+                    <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
+                
             </View>
         </Modal>
     );
