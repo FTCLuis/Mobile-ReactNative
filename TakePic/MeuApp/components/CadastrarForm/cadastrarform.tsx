@@ -3,8 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, } from 'rea
 import styles from './style';
 import { SEND_REQUEST, USER_REGISTER } from '../../api/Api';
 import { useNavigation } from '@react-navigation/native';
-import AlertModal from '../alertModal/alertModal';
 import { Modal } from 'react-native';
+import AlertModal from '../alertModal/alertModal';
 
 
 
@@ -17,6 +17,22 @@ const CadastrarForm = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
     const [loading, setLoading] = useState(false);
+
+
+    // {
+    //     "usuario": "Guilherme Saar",
+    //     "email": "guilherme.saar@gmail.com",
+    //     "senha": "G123",
+    //     "dataNasc": "2024-06-22T11:54:51.321Z",
+    //     "dataAtual": "2024-06-22T11:54:51.321Z",
+    //     "requestRegister": {
+    //         "status": true,
+    //         "httpCode": 201,
+    //         "data": {
+    //             "message": "Usuário \"Guilherme Saar\" criado com sucesso."
+    //         }
+    //     }
+    // }
 
     const cadastrar = async() => {
         if (!usuario || !email || !password) {
@@ -53,15 +69,6 @@ const CadastrarForm = () => {
             return;
         }
         
-        console.log({
-            usuario: usuario,
-            email: email,
-            senha: password,
-            dataNasc: new Date(),
-            dataAtual: new Date(),
-            requestRegister: requestRegister
-        })
-
         setErrorMessage("Usuário criado com sucesso!");
         setMessageType("success")
         setModalAlertVisible(true);
@@ -97,7 +104,10 @@ const CadastrarForm = () => {
                 </View>
             </Modal>
 
-            <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
+             
+            <View>  
+                <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
+            </View>
         </View>
     );
 };

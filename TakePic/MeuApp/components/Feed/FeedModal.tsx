@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 2,
     elevation: 5,
-    maxHeight: '80%',
+    maxHeight: '95%',
   },
   modalImageContainer: {
     width: '100%',
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   commentsContainer: {
-    maxHeight: 200,
+    maxHeight: 650,
     marginBottom: 10,
   },
   comment: {
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   commentInput: {
-    height: 100,
+    height: 60,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { PHOTO_POST, SEND_REQUEST, UPLOAD_PHOTO_POST, USER_GET_PHOTO } from '../../api/Api'; // Importe suas funções de requisição e configuração de URL
 import { useUser } from '../../provider/userProvider';
 import { userModel } from '../../models/userModel';
@@ -23,124 +23,166 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
         getUser: () => userModel;
     } | void = useUser()
 
-    const user: userModel | void = userProvider.getUser(); 
+    const user: userModel = userProvider.getUser(); 
     const navigation = useNavigation();
     const [description, setDescription] = useState('');
     const [imageUri, setImageUri] = useState<string | null>(null);
+
+    
+    const [loading, setLoading] = useState(false);
     const [modalAlertVisible, setModalAlertVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
 
-    
-    useEffect(() => {
-        if (!userProvider || !user || !navigation) return;
-    
-        async function atualizaPosts() {
-          try {
-            // Aqui você pode atualizar os posts do usuário após postar a foto
-            const postsUpdateOptions = USER_GET_PHOTO(user.usuario, user.token);
-            const responsePosts = await SEND_REQUEST(postsUpdateOptions.url, postsUpdateOptions.options);
-            
-            if (!responsePosts.status) {
-              console.error('Erro ao obter posts:', responsePosts.error);
-              return;
-            }
-            
-            const updatedUser = { ...user, posts: responsePosts.data.posts };
-            userProvider.setUser(updatedUser);
-          } catch (error) {
-            console.error('Erro ao atualizar posts:', error);
-          }
-        }
-        
-        atualizaPosts();
-    }, [userProvider, user, navigation]);
     
     const handleClose = () => {
         setImageUri(null);
         data.onClose();
     }
 
+    useEffect(() => {
+        if (!userProvider || !user || !navigation) return;
+    
+        async function atualizaPosts() {
+            
+          try {
+            // Aqui você pode atualizar os posts do usuário após postar a foto
+            const postsUpdateOptions = USER_GET_PHOTO(user.usuario, user.token);
+            const responsePosts = await SEND_REQUEST(postsUpdateOptions.url, postsUpdateOptions.options);
+            
+            // console.log(3)
+            if (!responsePosts.status) {
+                if (!responsePosts || responsePosts.error === 'Este usuário não obter posts.') {
+                    return;
+                }
+                
+                setErrorMessage(responsePosts.error ? responsePosts.error : 'Erro ao fazer login');
+                setMessageType("error")
+                setModalAlertVisible(true); 
+                setLoading(false);
+
+                console.error('Erro ao obter posts:', responsePosts.error);
+                return;
+            }
+            
+            const updatedUser = { ...user, posts: responsePosts.data.posts };
+            userProvider?.setUser(updatedUser);
+          } catch (error) {
+            console.error('Erro ao atualizar posts:', error);
+          }
+        }
+        
+        atualizaPosts();
+    }, [user.posts]);
+    
+
     const postarFoto = async () => {
+        setLoading(true);
         try {
             if (!imageUri) {
-                setErrorMessage("Imagem não selecionada!");
+                console.error("Imagem não selecionada!");
+                  
+                setErrorMessage('Imagem não selecionada');
                 setMessageType("error")
-                setModalAlertVisible(true);
+                setModalAlertVisible(true); 
+                setLoading(false);
                 return;
             }
         
-            const imageResponse = await fetch(imageUri);
-            const blob = await imageResponse.blob();
-        
+          
             const formData = new FormData();
-            formData.append('file', blob, 'photo.jpg');
+            if (Platform.OS === 'android') { 
+
+            }
+            else {
+                const imageResponse = await fetch(imageUri);
+                const blob = await imageResponse.blob();
+                formData.append('file', blob, 'photo.jpg');
+            }
+
+        
             const { url, options } = UPLOAD_PHOTO_POST(formData, user.token);
         
             const response = await SEND_REQUEST(url, options);
 
             if (!response.status) {
-                setErrorMessage("Erro ao postar a foto!");
+                console.error("Erro ao postar a foto!");
+                setErrorMessage(response.error ? response.error : 'Erro ao postar a foto');
                 setMessageType("error")
-                setModalAlertVisible(true);
+                setModalAlertVisible(true); 
+                setLoading(false);
                 return
             }
 
-            setErrorMessage("Foto postado com sucesso!");
-            setMessageType("success")
-            setModalAlertVisible(true);
+            console.log("Foto Uplodeada com sucesso!");
 
             const photoResponseOptions = PHOTO_POST({usuario: user.usuario, pathFotoPost: response.data.url, descricaoPost: description}, user.token, user._id)
             const responsePhoto = await SEND_REQUEST(photoResponseOptions.url, photoResponseOptions.options);
             
             if (!responsePhoto.status) {
-                setErrorMessage("Erro ao postar a foto!");
+                setErrorMessage(responsePhoto.error ? responsePhoto.error : 'Erro ao postar a foto');
                 setMessageType("error")
-                setModalAlertVisible(true);
-
-                return
+                setModalAlertVisible(true); 
+                setLoading(false);
+                console.error("Erro ao postar a foto!");
+                return;
             }
 
-            setErrorMessage("Foto postado com sucesso!");
-            setMessageType("success")
-            setModalAlertVisible(true);
-         
+            console.log("Foto postado com sucesso!");
+
             const postsUpdateOptions = USER_GET_PHOTO(user.usuario, user.token);
             const responsePosts = await SEND_REQUEST(postsUpdateOptions.url, postsUpdateOptions.options);
             
             if (!responsePosts.status) {
-                setErrorMessage("Erro ao obter os posts!");
+                console.error("Erro ao obter os posts!");
+                setErrorMessage(responsePosts.error ? responsePosts.error : 'Erro ao obter os posts');
                 setMessageType("error")
-                setModalAlertVisible(true);
-              return;
+                setModalAlertVisible(true); 
+                setLoading(false);
+                return;
             }
             
             const updatedUser = { ...user, posts: responsePosts.data.posts };
             userProvider.setUser(updatedUser);
 
+            setErrorMessage('Post Criado com sucesso!');
+            setMessageType("success")
+            setModalAlertVisible(true); 
+            setLoading(false);
+
             handleClose();
           
                 
         } catch (error) {
-            setErrorMessage("Erro na requisição!");
-            setMessageType("error")
-            setModalAlertVisible(true);
+            console.error("Erro na requisição!");
         }
     };
 
-    const openImagePicker = () => {
-        launchImageLibrary({ mediaType: 'photo' }, (response) => {
-            if (response.didCancel) {
-            console.log('Usuário cancelou a seleção da imagem');
-            } else if (response.errorCode) {
-            console.log('Erro: ', response.errorMessage);
-            } else if (response.assets && response.assets.length > 0) {
-            const uri = response.assets[0].uri;
-                if (uri) {
-                    setImageUri(uri);
+    const openImagePicker = async () => {
+        try {
+            const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                console.log('permission denied!')
+            }
+
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                base64: false,
+                aspect: [4, 4],
+                quality: 1,
+            });
+    
+            if (!result.canceled) {
+                if (result.assets[0].uri) {
+                    setImageUri(result.assets[0].uri);
+                } else {
+                    console.error('A URI da imagem selecionada não está disponível.');
                 }
             }
-        });
+        } catch (error) {
+            console.error('Erro ao abrir a galeria de imagens:', error);
+        }
     };
     
     return (
@@ -181,8 +223,21 @@ const CriarPostModal: React.FC<criarPostModalProps> = ({data}) => {
                         <Text style={styles.buttonText}>Postar Foto</Text>
                     </TouchableOpacity>
                 </View>
+
+                <Modal
+                    animationType="fade"
+                    transparent={true}
+                    visible={loading}
+                >
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                        <ActivityIndicator size="large" color="#FFFFFF" />
+                    </View>
+                </Modal>
+
+                    
+                    <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
+                
             </View>
-            <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
         </Modal>
     );
 }

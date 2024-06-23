@@ -13,8 +13,8 @@ const LoginForm = () => {
 
   const [modalAlertVisible, setModalAlertVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [email, setEmail] = useState('benicioCanalha@gmail.com');
-  const [password, setPassword] = useState('123456');
+  const [email, setEmail] = useState('guilherme.saar@gmail.com');
+  const [password, setPassword] = useState('G123');
   
   const [loading, setLoading] = useState(false);
   const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
@@ -23,7 +23,7 @@ const LoginForm = () => {
     if (user.isLogged) {
       navigation.navigate('MinhaContaScreen' as never); //home
     } else {
-      login()
+      // login()
     }
   }, [user.isLogged, navigation]); 
   
@@ -106,7 +106,8 @@ const LoginForm = () => {
           </View>
       </Modal>
 
-      <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
+          
+        <AlertModal visible={modalAlertVisible} message={errorMessage} type={MessageType} onClose={() => setModalAlertVisible(false)} />
     </View>
   );
 };

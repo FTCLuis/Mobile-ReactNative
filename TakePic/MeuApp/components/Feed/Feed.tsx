@@ -4,7 +4,7 @@ import FeedPhotos from './FeedPhotos';
 import FeedModal from './FeedModal';
 
 const Feed: React.FC = () => {
-  const [modalPhoto, setModalPhoto] = useState<any>(null); // Defina o tipo apropriado para modalPhoto
+  const [modalPhoto, setModalPhoto] = useState<any>(null);
 
   return (
     <View style={styles.mainContainer}>
@@ -18,9 +18,8 @@ const Feed: React.FC = () => {
 
 const styles = StyleSheet.create({
   mainContainer: {
-    marginTop: 2,
+    flex: 1,
   }
 });
-
 
 export default Feed;
