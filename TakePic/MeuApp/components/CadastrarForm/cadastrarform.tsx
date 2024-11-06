@@ -18,22 +18,6 @@ const CadastrarForm = () => {
     const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
     const [loading, setLoading] = useState(false);
 
-
-    // {
-    //     "usuario": "Guilherme Saar",
-    //     "email": "guilherme.saar@gmail.com",
-    //     "senha": "G123",
-    //     "dataNasc": "2024-06-22T11:54:51.321Z",
-    //     "dataAtual": "2024-06-22T11:54:51.321Z",
-    //     "requestRegister": {
-    //         "status": true,
-    //         "httpCode": 201,
-    //         "data": {
-    //             "message": "Usuário \"Guilherme Saar\" criado com sucesso."
-    //         }
-    //     }
-    // }
-
     const cadastrar = async() => {
         if (!usuario || !email || !password) {
             setErrorMessage("Sem Dados!");

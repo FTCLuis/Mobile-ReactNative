@@ -69,7 +69,7 @@ const PerfilUsuario = () => {
         };
 
         fetchImages();
-    }, [reloadData]); // Dependência adicionada aqui
+    }, [reloadData]);
 
     const checkIfFollowing = () => {
         const seguidores = user?.seguindo || [];

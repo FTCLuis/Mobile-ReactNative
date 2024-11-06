@@ -13,8 +13,8 @@ const LoginForm = () => {
 
   const [modalAlertVisible, setModalAlertVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [email, setEmail] = useState('guilherme.saar@gmail.com');
-  const [password, setPassword] = useState('G123');
+  const [email, setEmail] = useState('teste@teste.com');
+  const [password, setPassword] = useState('123');
   
   const [loading, setLoading] = useState(false);
   const [MessageType, setMessageType] = useState <'success' | 'error' | 'warning'>('warning');
